@@ -7,6 +7,7 @@ import '../../data/models/category_model.dart';
 import '../../data/models/transaction_model.dart';
 import '../../domain/services/smart_input_service.dart';
 import '../categories/categories_page.dart';
+import '../settings/settings_page.dart';
 import 'home_providers.dart';
 
 class HomePage extends StatefulWidget {
@@ -189,6 +190,15 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: const Icon(Icons.account_balance_wallet_outlined),
             onPressed: _showInitialBalanceDialog,
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsPage()),
+              );
+            },
           ),
           IconButton(
             icon: const Icon(Icons.category_outlined),
