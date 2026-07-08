@@ -28,6 +28,7 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = true;
   bool _isBalanceVisible = true;
   int _initialBalance = 0;
+  String? _selectedCategoryName;
 
   @override
   void initState() {
@@ -50,7 +51,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _processInput() async {
     final text = _textController.text;
-    final result = _smartInputService.parse(text);
+    final result = _smartInputService.parse(text, selectedCategory: _selectedCategoryName);
 
     if (result == null) {
       if (!mounted) return;
@@ -75,6 +76,7 @@ class _HomePageState extends State<HomePage> {
     await _loadTransactions();
 
     _textController.clear();
+    _selectedCategoryName = null;
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -326,18 +328,50 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             child: SafeArea(
-              child: TextField(
-                controller: _textController,
-                autofocus: true,
-                onSubmitted: (_) => _processInput(),
-                decoration: InputDecoration(
-                  hintText: 'Ex: 15,50 padaria...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: _processInput,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_categories.isNotEmpty)
+                    SizedBox(
+                      height: 44,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _categories.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final category = _categories[index];
+                          final isSelected = _selectedCategoryName == category.name;
+                          return ChoiceChip(
+                            label: Text(category.name),
+                            selected: isSelected,
+                            avatar: CircleAvatar(
+                              backgroundColor: Color(int.parse(category.colorHex, radix: 16)),
+                              child: Icon(Icons.category_outlined, size: 16, color: Colors.white),
+                            ),
+                            onSelected: (_) {
+                              setState(() {
+                                _selectedCategoryName = isSelected ? null : category.name;
+                              });
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _textController,
+                    autofocus: true,
+                    onSubmitted: (_) => _processInput(),
+                    decoration: InputDecoration(
+                      hintText: 'Ex: 15,50 padaria...',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: _processInput,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),

@@ -25,6 +25,15 @@ void main() {
       expect(result!.categoryName, 'Alimentação');
     });
 
+    test('uses selected category when provided', () {
+      final service = SmartInputService();
+
+      final result = service.parse('15,50 mercado', selectedCategory: 'Transporte');
+
+      expect(result, isNotNull);
+      expect(result!.categoryName, 'Transporte');
+    });
+
     test('includes initial balance in total balance calculation', () {
       final transactions = [
         TransactionModel(amountInCents: 50000, description: 'salario', date: DateTime.now(), type: 'income'),
