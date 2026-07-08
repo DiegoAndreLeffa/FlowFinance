@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'features/home/home_page.dart';
+import 'core/routing/app_router.dart';
 
-void main() {
-  runApp(const ProviderScope(child: FlowFinanceApp()));
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const FlowFinanceApp());
 }
 
 class FlowFinanceApp extends StatelessWidget {
@@ -11,14 +11,19 @@ class FlowFinanceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'FlowFinance',
       debugShowCheckedModeBanner: false,
+      themeMode: ThemeMode.system,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green, brightness: Brightness.dark),
+        useMaterial3: true,
+      ),
+      routerConfig: appRouter,
     );
   }
 }

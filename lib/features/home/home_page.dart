@@ -1,45 +1,83 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 
+import '../../core/utils/currency_formatter.dart';
+import '../../data/database/category_database_service.dart';
+import '../../data/database/database_service.dart';
+import '../../data/models/category_model.dart';
+import '../../data/models/transaction_model.dart';
 import '../../domain/services/smart_input_service.dart';
+import '../categories/categories_page.dart';
+import 'home_providers.dart';
 
-final showBalanceProvider = StateProvider<bool>((ref) => true);
-
-class HomePage extends ConsumerStatefulWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  ConsumerState<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends ConsumerState<HomePage> {
+class _HomePageState extends State<HomePage> {
   final TextEditingController _textController = TextEditingController();
   final SmartInputService _smartInputService = SmartInputService();
+  final DatabaseService _databaseService = DatabaseService();
+  final CategoryDatabaseService _categoryService = CategoryDatabaseService();
 
-  void _processInput() {
+  List<TransactionModel> _transactions = [];
+  List<CategoryModel> _categories = [];
+  bool _isLoading = true;
+  bool _isBalanceVisible = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTransactions();
+  }
+
+  Future<void> _loadTransactions() async {
+    final transactions = await _databaseService.getAllTransactions();
+    final categories = await _categoryService.getAllCategories();
+    if (!mounted) return;
+    setState(() {
+      _transactions = transactions;
+      _categories = categories;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _processInput() async {
     final text = _textController.text;
     final result = _smartInputService.parse(text);
 
-    if (result != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Sucesso! Descrição: ${result.description} | Centavos: ${result.amountInCents}',
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      _textController.clear();
-    } else {
+    if (result == null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Digite um valor e uma descrição. Ex: 15,50 padaria'),
+          content: Text('Formato inválido. Ex: 15,50 padaria'),
           backgroundColor: Colors.red,
         ),
       );
+      return;
     }
+
+    final newTx = TransactionModel(
+      amountInCents: result.amountInCents,
+      description: result.description,
+      date: DateTime.now(),
+      type: result.type,
+      categoryName: result.categoryName,
+    );
+
+    await _databaseService.saveTransaction(newTx);
+    await _loadTransactions();
+
+    _textController.clear();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Salvo: ${result.description}'),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   @override
@@ -48,9 +86,57 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.dispose();
   }
 
+  Future<void> _showEditDialog(TransactionModel transaction) async {
+    final descriptionController = TextEditingController(text: transaction.description);
+    final valueController = TextEditingController(text: (transaction.amountInCents / 100).toStringAsFixed(2));
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Editar transação'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: descriptionController, decoration: const InputDecoration(labelText: 'Descrição')),
+              TextField(controller: valueController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Valor')),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+            FilledButton(
+              onPressed: () async {
+                final description = descriptionController.text.trim();
+                final amount = double.tryParse(valueController.text.replaceAll(',', '.')) ?? 0;
+                if (description.isEmpty) return;
+
+                final updatedTransaction = TransactionModel(
+                  id: transaction.id,
+                  amountInCents: (amount * 100).round(),
+                  description: description,
+                  date: transaction.date,
+                  type: transaction.type,
+                  categoryName: transaction.categoryName,
+                );
+
+                await _databaseService.updateTransaction(updatedTransaction);
+                if (!context.mounted) return;
+                Navigator.pop(context);
+                await _loadTransactions();
+              },
+              child: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isBalanceVisible = ref.watch(showBalanceProvider);
+    final currentBalance = calculateBalance(_transactions);
+    final monthlyIncome = _transactions.where((tx) => tx.type == 'income').fold<int>(0, (sum, tx) => sum + tx.amountInCents.abs());
+    final monthlyExpense = _transactions.where((tx) => tx.type == 'expense').fold<int>(0, (sum, tx) => sum + tx.amountInCents.abs());
 
     return Scaffold(
       appBar: AppBar(
@@ -58,11 +144,20 @@ class _HomePageState extends ConsumerState<HomePage> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(
-              isBalanceVisible ? Icons.visibility : Icons.visibility_off,
-            ),
+            icon: Icon(_isBalanceVisible ? Icons.visibility : Icons.visibility_off),
             onPressed: () {
-              ref.read(showBalanceProvider.notifier).state = !isBalanceVisible;
+              setState(() {
+                _isBalanceVisible = !_isBalanceVisible;
+              });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.category_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CategoriesPage()),
+              );
             },
           ),
         ],
@@ -73,28 +168,101 @@ class _HomePageState extends ConsumerState<HomePage> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                const Text(
-                  'Saldo Atual',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
+                const Text('Saldo Atual', style: TextStyle(fontSize: 16, color: Colors.grey)),
                 const SizedBox(height: 8),
                 Text(
-                  isBalanceVisible ? 'R\$ 1.250,00' : 'R\$ •••••',
-                  style: const TextStyle(
+                  _isBalanceVisible ? formatCurrency(currentBalance) : 'R\$ •••••',
+                  style: TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
+                    color: currentBalance < 0 ? Colors.red : Colors.black,
                   ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Gasto no mês', style: TextStyle(color: Colors.red)),
+                            Text(formatCurrency(monthlyExpense), style: const TextStyle(fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Recebido no mês', style: TextStyle(color: Colors.green)),
+                            Text(formatCurrency(monthlyIncome), style: const TextStyle(fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          const Expanded(
-            child: Center(
-              child: Text(
-                'Nenhuma transação hoje.',
-                style: TextStyle(color: Colors.grey),
-              ),
-            ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _transactions.isEmpty
+                    ? const Center(
+                        child: Text('Nenhuma transação hoje.', style: TextStyle(color: Colors.grey)),
+                      )
+                    : ListView.builder(
+                        itemCount: _transactions.length,
+                        itemBuilder: (context, index) {
+                          final tx = _transactions[index];
+                          final category = _categories.firstWhere(
+                            (item) => item.name == tx.categoryName,
+                            orElse: () => CategoryModel(name: 'Sem categoria', colorHex: 'FF9E9E9E', iconName: 'category'),
+                          );
+
+                          return Dismissible(
+                            key: ValueKey(tx.id == 0 ? '${tx.description}-${tx.date.toIso8601String()}' : tx.id),
+                            background: Container(
+                              color: Colors.red,
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
+                              child: const Icon(Icons.delete, color: Colors.white),
+                            ),
+                            onDismissed: (_) async {
+                              await _databaseService.deleteTransaction(tx.id);
+                              await _loadTransactions();
+                            },
+                            child: ListTile(
+                              onTap: () => _showEditDialog(tx),
+                              leading: CircleAvatar(
+                                backgroundColor: Color(int.parse(category.colorHex, radix: 16)).withValues(alpha: 0.1),
+                                child: Icon(Icons.category_outlined, color: Color(int.parse(category.colorHex, radix: 16))),
+                              ),
+                              title: Text(tx.description),
+                              subtitle: Text('${tx.date.day}/${tx.date.month}/${tx.date.year}${tx.categoryName != null ? ' • ${tx.categoryName}' : ''}'),
+                              trailing: Text(
+                                _isBalanceVisible ? formatCurrency(tx.amountInCents) : 'R\$ •••••',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
           ),
           Container(
             padding: const EdgeInsets.all(16.0),
@@ -102,7 +270,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               color: Theme.of(context).colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 ),
@@ -115,9 +283,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 onSubmitted: (_) => _processInput(),
                 decoration: InputDecoration(
                   hintText: 'Ex: 15,50 padaria...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.send),
                     onPressed: _processInput,
