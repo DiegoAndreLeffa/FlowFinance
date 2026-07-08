@@ -4,11 +4,11 @@ int calculateBalance(List<TransactionModel> transactions, {int initialBalance = 
   var total = initialBalance;
 
   for (final transaction in transactions) {
-    if (transaction.type == 'income') {
-      total += transaction.amountInCents.toInt();
-    } else {
-      total -= transaction.amountInCents.toInt();
-    }
+    final amount = transaction.type == 'income'
+        ? transaction.amountInCents.abs()
+        : -transaction.amountInCents.abs();
+
+    total += amount;
   }
 
   return total;

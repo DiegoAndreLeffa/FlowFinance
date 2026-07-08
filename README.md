@@ -33,8 +33,6 @@ A seguir estão os itens que ainda precisam ser finalizados para fechar o MVP de
 
 ## Erros atuais
 
-- [ ] Saldo somando com os gastos
-- [ ] Botão de configuração não esta aparecendo corretamente
 
 ## Como executar
 

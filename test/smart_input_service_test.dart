@@ -35,5 +35,15 @@ void main() {
 
       expect(balance, 135000);
     });
+
+    test('subtracts expenses even when they are stored as negative cents', () {
+      final transactions = [
+        TransactionModel(amountInCents: -15000, description: 'mercado', date: DateTime.now(), type: 'expense'),
+      ];
+
+      final balance = calculateBalance(transactions, initialBalance: 50000);
+
+      expect(balance, 35000);
+    });
   });
 }
