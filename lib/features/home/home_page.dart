@@ -26,6 +26,7 @@ class _HomePageState extends State<HomePage> {
   List<CategoryModel> _categories = [];
   bool _isLoading = true;
   bool _isBalanceVisible = true;
+  int _initialBalance = 0;
 
   @override
   void initState() {
@@ -36,10 +37,12 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadTransactions() async {
     final transactions = await _databaseService.getAllTransactions();
     final categories = await _categoryService.getAllCategories();
+    final initialBalance = await _databaseService.getInitialBalance();
     if (!mounted) return;
     setState(() {
       _transactions = transactions;
       _categories = categories;
+      _initialBalance = initialBalance;
       _isLoading = false;
     });
   }
@@ -84,6 +87,38 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _textController.dispose();
     super.dispose();
+  }
+
+  Future<void> _showInitialBalanceDialog() async {
+    final controller = TextEditingController(text: (_initialBalance / 100).toStringAsFixed(2));
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Saldo inicial'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'Valor inicial'),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+            FilledButton(
+              onPressed: () async {
+                final value = double.tryParse(controller.text.replaceAll(',', '.')) ?? 0;
+                final cents = (value * 100).round();
+                await _databaseService.saveInitialBalance(cents);
+                if (!context.mounted) return;
+                Navigator.pop(context);
+                await _loadTransactions();
+              },
+              child: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _showEditDialog(TransactionModel transaction) async {
@@ -134,7 +169,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final currentBalance = calculateBalance(_transactions);
+    final currentBalance = calculateBalance(_transactions, initialBalance: _initialBalance);
     final monthlyIncome = _transactions.where((tx) => tx.type == 'income').fold<int>(0, (sum, tx) => sum + tx.amountInCents.abs());
     final monthlyExpense = _transactions.where((tx) => tx.type == 'expense').fold<int>(0, (sum, tx) => sum + tx.amountInCents.abs());
 
@@ -150,6 +185,10 @@ class _HomePageState extends State<HomePage> {
                 _isBalanceVisible = !_isBalanceVisible;
               });
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            onPressed: _showInitialBalanceDialog,
           ),
           IconButton(
             icon: const Icon(Icons.category_outlined),

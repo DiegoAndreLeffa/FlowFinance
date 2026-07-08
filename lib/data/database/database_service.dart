@@ -11,6 +11,7 @@ class DatabaseService {
   DatabaseService._internal();
 
   static const _storageKey = 'transactions';
+  static const _initialBalanceKey = 'initial_balance';
 
   Future<void> saveTransaction(TransactionModel newTransaction) async {
     final transactions = await getAllTransactions();
@@ -64,13 +65,46 @@ class DatabaseService {
     await prefs.setString(_storageKey, payload);
   }
 
+  Future<int> getInitialBalance() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_initialBalanceKey) ?? 0;
+  }
+
+  Future<void> saveInitialBalance(int amountInCents) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_initialBalanceKey, amountInCents);
+  }
+
   Future<String> exportToJson() async {
     final transactions = await getAllTransactions();
-    return jsonEncode(transactions.map((item) => item.toJson()).toList());
+    final initialBalance = await getInitialBalance();
+    return jsonEncode({
+      'initialBalance': initialBalance,
+      'transactions': transactions.map((item) => item.toJson()).toList(),
+    });
   }
 
   Future<void> importFromJson(String payload) async {
     final decoded = jsonDecode(payload);
+
+    if (decoded is Map<String, dynamic>) {
+      final initialBalance = decoded['initialBalance'] as int? ?? 0;
+      final transactionsJson = decoded['transactions'];
+      if (transactionsJson is! List) {
+        return;
+      }
+
+      final transactions = transactionsJson
+          .whereType<Map<String, dynamic>>()
+          .map((item) => TransactionModel.fromJson(item))
+          .toList();
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_initialBalanceKey, initialBalance);
+      await prefs.setString(_storageKey, jsonEncode(transactions.map((item) => item.toJson()).toList()));
+      return;
+    }
+
     if (decoded is! List) {
       return;
     }

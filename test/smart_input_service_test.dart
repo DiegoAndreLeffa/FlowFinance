@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flow_finance/domain/services/smart_input_service.dart';
+import 'package:flow_finance/features/home/home_providers.dart';
+import 'package:flow_finance/data/models/transaction_model.dart';
 
 void main() {
   group('SmartInputService', () {
@@ -21,6 +23,17 @@ void main() {
 
       expect(result, isNotNull);
       expect(result!.categoryName, 'Alimentação');
+    });
+
+    test('includes initial balance in total balance calculation', () {
+      final transactions = [
+        TransactionModel(amountInCents: 50000, description: 'salario', date: DateTime.now(), type: 'income'),
+        TransactionModel(amountInCents: 15000, description: 'mercado', date: DateTime.now(), type: 'expense'),
+      ];
+
+      final balance = calculateBalance(transactions, initialBalance: 100000);
+
+      expect(balance, 135000);
     });
   });
 }
