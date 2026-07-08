@@ -1,7 +1,7 @@
 import '../entities/smart_input_result.dart';
 
 class SmartInputService {
-  SmartInputResult? parse(String input) {
+  SmartInputResult? parse(String input, {String? selectedCategory}) {
     final text = input.trim();
     if (text.isEmpty) return null;
 
@@ -34,7 +34,7 @@ class SmartInputService {
     final cents = (doubleAmount * 100).round();
 
     final type = hasIncomePrefix ? 'income' : 'expense';
-    final categoryName = _inferCategory(description);
+    final categoryName = selectedCategory?.trim().isNotEmpty == true ? selectedCategory!.trim() : _inferCategory(description);
 
     return SmartInputResult(
       amountInCents: type == 'income' ? cents : -cents,
