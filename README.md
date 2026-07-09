@@ -19,8 +19,6 @@ O projeto já possui uma base funcional do MVP com:
 
 A seguir estão os itens que ainda precisam ser finalizados para fechar o MVP de forma mais completa:
 
-- [ ] Melhorar a gestão de categorias com cores, ícones e edição do nome
-- [ ] Adicionar filtros por período (dia, semana, mês) e por categoria
 - [ ] Criar gráficos e visualizações mais ricas para receitas, despesas e saldo
 - [ ] Permitir cadastrar transações recorrentes (ex.: aluguel, assinatura)
 - [ ] Melhorar a entrada inteligente para reconhecer mais padrões de texto
