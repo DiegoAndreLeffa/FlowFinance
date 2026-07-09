@@ -29,6 +29,8 @@ class _HomePageState extends State<HomePage> {
   bool _isBalanceVisible = true;
   int _initialBalance = 0;
   String? _selectedCategoryName;
+  String? _filterCategoryName;
+  String _selectedPeriod = 'all';
 
   @override
   void initState() {
@@ -172,9 +174,15 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final currentBalance = calculateBalance(_transactions, initialBalance: _initialBalance);
-    final monthlyIncome = _transactions.where((tx) => tx.type == 'income').fold<int>(0, (sum, tx) => sum + tx.amountInCents.abs());
-    final monthlyExpense = _transactions.where((tx) => tx.type == 'expense').fold<int>(0, (sum, tx) => sum + tx.amountInCents.abs());
+    final periodTransactions = filterTransactionsByPeriod(_transactions, period: _selectedPeriod);
+    final filteredTransactions = filterTransactions(
+      periodTransactions,
+      categoryName: _filterCategoryName,
+      period: _selectedPeriod,
+    );
+    final currentBalance = calculateBalance(periodTransactions, initialBalance: _initialBalance);
+    final monthlyIncome = periodTransactions.where((tx) => tx.type == 'income').fold<int>(0, (sum, tx) => sum + tx.amountInCents.abs());
+    final monthlyExpense = periodTransactions.where((tx) => tx.type == 'expense').fold<int>(0, (sum, tx) => sum + tx.amountInCents.abs());
 
     return Scaffold(
       appBar: AppBar(
@@ -230,6 +238,69 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ChoiceChip(
+                      label: const Text('Todos'),
+                      selected: _selectedPeriod == 'all',
+                      onSelected: (_) => setState(() => _selectedPeriod = 'all'),
+                    ),
+                    ChoiceChip(
+                      label: const Text('Hoje'),
+                      selected: _selectedPeriod == 'day',
+                      onSelected: (_) => setState(() => _selectedPeriod = 'day'),
+                    ),
+                    ChoiceChip(
+                      label: const Text('Semana'),
+                      selected: _selectedPeriod == 'week',
+                      onSelected: (_) => setState(() => _selectedPeriod = 'week'),
+                    ),
+                    ChoiceChip(
+                      label: const Text('Mês'),
+                      selected: _selectedPeriod == 'month',
+                      onSelected: (_) => setState(() => _selectedPeriod = 'month'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (_categories.isNotEmpty)
+                  SizedBox(
+                    height: 44,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _categories.length + 1,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          final isSelected = _filterCategoryName == null;
+                          return ChoiceChip(
+                            label: const Text('Todas'),
+                            selected: isSelected,
+                            onSelected: (_) => setState(() => _filterCategoryName = null),
+                          );
+                        }
+
+                        final category = _categories[index - 1];
+                        final isSelected = _filterCategoryName == category.name;
+                        return ChoiceChip(
+                          label: Text(category.name),
+                          selected: isSelected,
+                          avatar: CircleAvatar(
+                            backgroundColor: Color(int.parse(category.colorHex, radix: 16)),
+                            child: Icon(Icons.category_outlined, size: 16, color: Colors.white),
+                          ),
+                          onSelected: (_) {
+                            setState(() {
+                              _filterCategoryName = isSelected ? null : category.name;
+                            });
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
@@ -273,14 +344,14 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _transactions.isEmpty
+                : filteredTransactions.isEmpty
                     ? const Center(
-                        child: Text('Nenhuma transação hoje.', style: TextStyle(color: Colors.grey)),
+                        child: Text('Nenhuma transação para este filtro.', style: TextStyle(color: Colors.grey)),
                       )
                     : ListView.builder(
-                        itemCount: _transactions.length,
+                        itemCount: filteredTransactions.length,
                         itemBuilder: (context, index) {
-                          final tx = _transactions[index];
+                          final tx = filteredTransactions[index];
                           final category = _categories.firstWhere(
                             (item) => item.name == tx.categoryName,
                             orElse: () => CategoryModel(name: 'Sem categoria', colorHex: 'FF9E9E9E', iconName: 'category'),
