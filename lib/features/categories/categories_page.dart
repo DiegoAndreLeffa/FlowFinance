@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/utils/category_icon_mapper.dart';
 import '../../data/database/category_database_service.dart';
 import '../../data/models/category_model.dart';
 
@@ -76,6 +77,14 @@ class _CategoriesPageState extends State<CategoriesPage> {
                       decoration: const InputDecoration(hintText: 'Nome da categoria'),
                     ),
                     const SizedBox(height: 12),
+                    const Text('Ícone atual'),
+                    const SizedBox(height: 8),
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: selectedColor.withValues(alpha: 0.15),
+                      child: Icon(selectedIcon, color: selectedColor),
+                    ),
+                    const SizedBox(height: 12),
                     const Text('Cor'),
                     const SizedBox(height: 8),
                     Wrap(
@@ -123,7 +132,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                       id: category?.id ?? DateTime.now().millisecondsSinceEpoch,
                       name: name,
                       colorHex: selectedColor.value.toRadixString(16).toUpperCase(),
-                      iconName: _iconName(selectedIcon),
+                      iconName: iconNameFromIcon(selectedIcon),
                     );
 
                     if (category == null) {
@@ -152,37 +161,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
   }
 
   IconData _iconFromName(String? iconName) {
-    return _availableIcons.firstWhere(
-      (icon) => _iconName(icon) == iconName,
-      orElse: () => Icons.category_outlined,
-    );
-  }
-
-  String _iconName(IconData icon) {
-    switch (icon.codePoint) {
-      case 0xe3af:
-        return 'category';
-      case 0xe561:
-        return 'restaurant';
-      case 0xe531:
-        return 'directions_car';
-      case 0xe8cc:
-        return 'shopping_bag';
-      case 0xe88a:
-        return 'home';
-      case 0xf1b5:
-        return 'healing';
-      case 0xe80c:
-        return 'school';
-      case 0xf1e7:
-        return 'sports_esports';
-      case 0xe539:
-        return 'flight';
-      case 0xe40c:
-        return 'movie';
-      default:
-        return 'category';
-    }
+    return iconFromCategoryName(iconName);
   }
 
   @override

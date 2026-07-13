@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../core/utils/category_icon_mapper.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/database/category_database_service.dart';
 import '../../data/database/database_service.dart';
 import '../../data/models/category_model.dart';
+import '../../data/models/recurring_transaction_model.dart';
 import '../../data/models/transaction_model.dart';
 import '../../domain/services/smart_input_service.dart';
 import '../categories/categories_page.dart';
@@ -38,14 +40,21 @@ class _HomePageState extends State<HomePage> {
     _loadTransactions();
   }
 
+  Future<void> _scheduleRecurringTransactions() async {
+    await _databaseService.syncRecurringTransactions();
+    await _loadTransactions();
+  }
+
   Future<void> _loadTransactions() async {
+    await _databaseService.syncRecurringTransactions();
     final transactions = await _databaseService.getAllTransactions();
     final categories = await _categoryService.getAllCategories();
+    final activeCategories = categories.where((category) => category.name.trim().isNotEmpty).toList();
     final initialBalance = await _databaseService.getInitialBalance();
     if (!mounted) return;
     setState(() {
       _transactions = transactions;
-      _categories = categories;
+      _categories = activeCategories;
       _initialBalance = initialBalance;
       _isLoading = false;
     });
@@ -121,6 +130,83 @@ class _HomePageState extends State<HomePage> {
               child: const Text('Salvar'),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showRecurringDialog() async {
+    final descriptionController = TextEditingController();
+    final valueController = TextEditingController();
+    final frequencyController = TextEditingController(text: 'monthly');
+    String? selectedCategoryName = _selectedCategoryName;
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Nova recorrência'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(controller: descriptionController, decoration: const InputDecoration(labelText: 'Descrição')),
+                  TextField(controller: valueController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Valor')),
+                  TextField(controller: frequencyController, decoration: const InputDecoration(labelText: 'Frequência (daily/weekly/monthly)')),
+                  const SizedBox(height: 12),
+                  if (_categories.isNotEmpty)
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('Sem categoria'),
+                          selected: selectedCategoryName == null,
+                          onSelected: (_) => setDialogState(() => selectedCategoryName = null),
+                        ),
+                        ..._categories.map((category) {
+                          final isSelected = selectedCategoryName == category.name;
+                          return ChoiceChip(
+                            label: Text(category.name),
+                            selected: isSelected,
+                            onSelected: (_) => setDialogState(() => selectedCategoryName = isSelected ? null : category.name),
+                          );
+                        }),
+                      ],
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+                FilledButton(
+                  onPressed: () async {
+                    final description = descriptionController.text.trim();
+                    final amount = double.tryParse(valueController.text.replaceAll(',', '.')) ?? 0;
+                    final frequency = frequencyController.text.trim().isEmpty ? 'monthly' : frequencyController.text.trim();
+                    if (description.isEmpty || amount <= 0) return;
+
+                    final recurring = RecurringTransactionModel(
+                      id: DateTime.now().millisecondsSinceEpoch,
+                      amountInCents: (amount * 100).round(),
+                      description: description,
+                      type: 'expense',
+                      categoryName: selectedCategoryName,
+                      frequency: frequency,
+                      startDate: DateTime.now(),
+                      nextDueDate: DateTime.now(),
+                    );
+
+                    await _databaseService.saveRecurringTransaction(recurring);
+                    if (!context.mounted) return;
+                    Navigator.pop(context);
+                    await _loadTransactions();
+                  },
+                  child: const Text('Salvar'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -289,7 +375,7 @@ class _HomePageState extends State<HomePage> {
                           selected: isSelected,
                           avatar: CircleAvatar(
                             backgroundColor: Color(int.parse(category.colorHex, radix: 16)),
-                            child: Icon(Icons.category_outlined, size: 16, color: Colors.white),
+                            child: Icon(iconFromCategoryName(category.iconName), size: 16, color: Colors.white),
                           ),
                           onSelected: (_) {
                             setState(() {
@@ -373,7 +459,7 @@ class _HomePageState extends State<HomePage> {
                               onTap: () => _showEditDialog(tx),
                               leading: CircleAvatar(
                                 backgroundColor: Color(int.parse(category.colorHex, radix: 16)).withValues(alpha: 0.1),
-                                child: Icon(Icons.category_outlined, color: Color(int.parse(category.colorHex, radix: 16))),
+                                child: Icon(iconFromCategoryName(category.iconName), color: Color(int.parse(category.colorHex, radix: 16))),
                               ),
                               title: Text(tx.description),
                               subtitle: Text('${tx.date.day}/${tx.date.month}/${tx.date.year}${tx.categoryName != null ? ' • ${tx.categoryName}' : ''}'),
@@ -417,7 +503,7 @@ class _HomePageState extends State<HomePage> {
                             selected: isSelected,
                             avatar: CircleAvatar(
                               backgroundColor: Color(int.parse(category.colorHex, radix: 16)),
-                              child: Icon(Icons.category_outlined, size: 16, color: Colors.white),
+                              child: Icon(iconFromCategoryName(category.iconName), size: 16, color: Colors.white),
                             ),
                             onSelected: (_) {
                               setState(() {
@@ -429,18 +515,29 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   const SizedBox(height: 8),
-                  TextField(
-                    controller: _textController,
-                    autofocus: true,
-                    onSubmitted: (_) => _processInput(),
-                    decoration: InputDecoration(
-                      hintText: 'Ex: 15,50 padaria...',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.send),
-                        onPressed: _processInput,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _textController,
+                          autofocus: true,
+                          onSubmitted: (_) => _processInput(),
+                          decoration: InputDecoration(
+                            hintText: 'Ex: 15,50 padaria...',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.send),
+                              onPressed: _processInput,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      IconButton.filled(
+                        onPressed: _showRecurringDialog,
+                        icon: const Icon(Icons.repeat),
+                      ),
+                    ],
                   ),
                 ],
               ),
