@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/utils/category_icon_mapper.dart';
 import '../../core/utils/currency_formatter.dart';
@@ -288,21 +289,21 @@ class _HomePageState extends State<HomePage> {
             onPressed: _showInitialBalanceDialog,
           ),
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: const Icon(Icons.category_outlined),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SettingsPage()),
-              );
+              context.push('/categories'); 
             },
           ),
           IconButton(
-            icon: const Icon(Icons.category_outlined),
+            icon: const Icon(Icons.pie_chart_outline), // Ícone de gráfico!
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CategoriesPage()),
-              );
+              context.push('/insights'); 
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              context.push('/settings');
             },
           ),
         ],

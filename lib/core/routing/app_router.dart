@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/categories/categories_page.dart';
 import '../../features/home/home_page.dart';
 import '../../features/settings/settings_page.dart';
+import '../../features/insights/insights_page.dart';
 
 final appRouter = GoRouter(
   routes: [
@@ -17,6 +18,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsPage(),
+    ),
+    GoRoute(
+      path: '/insights',
+      builder: (context, state) => const InsightsPage(),
     ),
   ],
 );
