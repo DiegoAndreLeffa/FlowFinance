@@ -1,11 +1,12 @@
 import '../entities/smart_input_result.dart';
 
 class SmartInputService {
-  SmartInputResult? parse(String input, {String? selectedCategory}) {
+  SmartInputResult? parse(String input, {String? selectedCategory, bool isIncomeMode = false}) {
     final text = input.trim();
     if (text.isEmpty) return null;
 
     final normalized = text.replaceAll(RegExp(r'\s+'), ' ');
+    
     final hasIncomePrefix = normalized.startsWith('+');
     final cleanText = hasIncomePrefix ? normalized.substring(1).trim() : normalized;
 
@@ -33,8 +34,11 @@ class SmartInputService {
     final doubleAmount = double.tryParse(cleanAmount) ?? 0.0;
     final cents = (doubleAmount * 100).round();
 
-    final type = hasIncomePrefix ? 'income' : 'expense';
-    final categoryName = selectedCategory?.trim().isNotEmpty == true ? selectedCategory!.trim() : _inferCategory(description);
+    final type = (hasIncomePrefix || isIncomeMode) ? 'income' : 'expense';
+    
+    final categoryName = selectedCategory?.trim().isNotEmpty == true 
+        ? selectedCategory!.trim() 
+        : _inferCategory(description);
 
     return SmartInputResult(
       amountInCents: type == 'income' ? cents : -cents,

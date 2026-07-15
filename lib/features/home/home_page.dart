@@ -34,6 +34,7 @@ class _HomePageState extends State<HomePage> {
   String? _selectedCategoryName;
   String? _filterCategoryName;
   String _selectedPeriod = 'all';
+  bool _isIncomeMode = false;
 
   @override
   void initState() {
@@ -63,7 +64,11 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _processInput() async {
     final text = _textController.text;
-    final result = _smartInputService.parse(text, selectedCategory: _selectedCategoryName);
+    final result = _smartInputService.parse(
+      text, 
+      selectedCategory: _selectedCategoryName,
+      isIncomeMode: _isIncomeMode,
+    );
 
     if (result == null) {
       if (!mounted) return;
@@ -90,6 +95,11 @@ class _HomePageState extends State<HomePage> {
     _textController.clear();
     _selectedCategoryName = null;
     if (!mounted) return;
+    
+    setState(() {
+      _isIncomeMode = false; 
+    });
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Salvo: ${result.description}'),
@@ -295,7 +305,7 @@ class _HomePageState extends State<HomePage> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.pie_chart_outline), // Ícone de gráfico!
+            icon: const Icon(Icons.pie_chart_outline),
             onPressed: () {
               context.push('/insights'); 
             },
@@ -518,16 +528,44 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: _isIncomeMode ? Colors.green.withValues(alpha: 0.15) : Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            _isIncomeMode ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                            color: _isIncomeMode ? Colors.green : Colors.red,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isIncomeMode = !_isIncomeMode;
+                            });
+                          },
+                          tooltip: _isIncomeMode ? 'Receita' : 'Despesa',
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: TextField(
                           controller: _textController,
                           autofocus: true,
                           onSubmitted: (_) => _processInput(),
                           decoration: InputDecoration(
-                            hintText: 'Ex: 15,50 padaria...',
+                            hintText: _isIncomeMode ? 'Ex: 5000 salario' : 'Ex: 15,50 padaria...',
+                            hintStyle: TextStyle(color: _isIncomeMode ? Colors.green.shade300 : Colors.grey),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: _isIncomeMode ? Colors.green : Theme.of(context).colorScheme.primary,
+                                width: 2,
+                              ),
+                            ),
                             suffixIcon: IconButton(
                               icon: const Icon(Icons.send),
+                              color: _isIncomeMode ? Colors.green : Theme.of(context).colorScheme.primary,
                               onPressed: _processInput,
                             ),
                           ),
