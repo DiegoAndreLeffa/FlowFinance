@@ -19,7 +19,6 @@ O projeto já possui uma base funcional do MVP com:
 
 A seguir estão os itens que ainda precisam ser finalizados para fechar o MVP de forma mais completa:
 
-- [ ] Simplificar o metodo/jeito de adicionar valores recebidos (ex: salario). (Nem sempre vou lembrar de adicionar um + antes do valor)
 - [ ] Ajustar a atualização dos dados no app (Excluir algum valor não altera nas outras telas (state)) 
 - [ ] Melhorar a entrada inteligente para reconhecer mais padrões de texto
 - [ ] Adicionar opção de excluir/limpar todo o histórico com confirmação
@@ -33,7 +32,7 @@ A seguir estão os itens que ainda precisam ser finalizados para fechar o MVP de
 ## Erros atuais
 
 ## Implementando ainda
-- [ ] Criar gráficos e visualizações mais ricas para receitas, despesas e saldo
+
 
 ## Como executar
 
