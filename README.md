@@ -19,8 +19,8 @@ O projeto já possui uma base funcional do MVP com:
 
 A seguir estão os itens que ainda precisam ser finalizados para fechar o MVP de forma mais completa:
 
-- [ ] Ajustar a atualização dos dados no app (Excluir algum valor não altera nas outras telas (state)) 
 - [ ] Melhorar a entrada inteligente para reconhecer mais padrões de texto
+- [ ] Adicionar um carrocel na seleção rapida das categorias na homepage
 - [ ] Adicionar opção de excluir/limpar todo o histórico com confirmação
 - [ ] Criar uma tela de resumo mais completa com metas e insights simples
 - [ ] Melhorar o fluxo de backup/importação com upload/download de arquivo real
@@ -32,7 +32,6 @@ A seguir estão os itens que ainda precisam ser finalizados para fechar o MVP de
 ## Erros atuais
 
 ## Implementando ainda
-
 
 ## Como executar
 

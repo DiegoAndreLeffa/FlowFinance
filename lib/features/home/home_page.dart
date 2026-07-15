@@ -299,21 +299,24 @@ class _HomePageState extends State<HomePage> {
             onPressed: _showInitialBalanceDialog,
           ),
           IconButton(
-            icon: const Icon(Icons.category_outlined),
-            onPressed: () {
-              context.push('/categories'); 
+            icon: const Icon(Icons.pie_chart_outline),
+            onPressed: () async {
+              await context.push('/insights');
+              _loadTransactions(); 
             },
           ),
           IconButton(
-            icon: const Icon(Icons.pie_chart_outline),
-            onPressed: () {
-              context.push('/insights'); 
+            icon: const Icon(Icons.category_outlined),
+            onPressed: () async {
+              await context.push('/categories');
+              _loadTransactions();
             },
           ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              context.push('/settings');
+            onPressed: () async {
+              await context.push('/settings');
+              _loadTransactions();
             },
           ),
         ],
