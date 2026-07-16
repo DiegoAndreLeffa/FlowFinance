@@ -2,13 +2,23 @@ import '../entities/smart_input_result.dart';
 
 class SmartInputService {
   SmartInputResult? parse(String input, {String? selectedCategory, bool isIncomeMode = false}) {
-    final text = input.trim();
+    String text = input.trim();
     if (text.isEmpty) return null;
 
+    bool isYesterday = false;
+    if (text.toLowerCase().endsWith(' ontem')) {
+      isYesterday = true;
+      text = text.substring(0, text.length - 6).trim();
+    }
+
+    text = text.replaceAll(RegExp(r'(r\$|\$|-)', caseSensitive: false), '').trim();
+
     final normalized = text.replaceAll(RegExp(r'\s+'), ' ');
-    
     final hasIncomePrefix = normalized.startsWith('+');
-    final cleanText = hasIncomePrefix ? normalized.substring(1).trim() : normalized;
+    String cleanText = hasIncomePrefix ? normalized.substring(1).trim() : normalized;
+
+    cleanText = cleanText.replaceAll(RegExp(r'\b(no|na|em|com|de|por|gastei|paguei)\b', caseSensitive: false), ' ').trim();
+    cleanText = cleanText.replaceAll(RegExp(r'\s+'), ' ');
 
     final pattern1 = RegExp(r'^(\d+[.,]?\d*)\s+(.+)$');
     final pattern2 = RegExp(r'^(.+)\s+(\d+[.,]?\d*)$');
@@ -30,6 +40,10 @@ class SmartInputService {
       }
     }
 
+    if (description.isNotEmpty) {
+      description = description[0].toUpperCase() + description.substring(1);
+    }
+
     final cleanAmount = rawAmount.replaceAll(',', '.');
     final doubleAmount = double.tryParse(cleanAmount) ?? 0.0;
     final cents = (doubleAmount * 100).round();
@@ -45,6 +59,7 @@ class SmartInputService {
       description: description.trim(),
       type: type,
       categoryName: categoryName,
+      date: isYesterday ? DateTime.now().subtract(const Duration(days: 1)) : DateTime.now(), 
     );
   }
 

@@ -84,7 +84,7 @@ class _HomePageState extends State<HomePage> {
     final newTx = TransactionModel(
       amountInCents: result.amountInCents,
       description: result.description,
-      date: DateTime.now(),
+      date: result.date,
       type: result.type,
       categoryName: result.categoryName,
     );
