@@ -19,7 +19,6 @@ O projeto já possui uma base funcional do MVP com:
 
 A seguir estão os itens que ainda precisam ser finalizados para fechar o MVP de forma mais completa:
 
-- [ ] Adicionar um carrocel na seleção rapida das categorias na homepage
 - [ ] Adicionar opção de excluir/limpar todo o histórico com confirmação
 - [ ] Criar uma tela de resumo mais completa com metas e insights simples
 - [ ] Melhorar o fluxo de backup/importação com upload/download de arquivo real
