@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -365,39 +366,65 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 const SizedBox(height: 12),
+                const SizedBox(height: 12),
                 if (_categories.isNotEmpty)
-                  SizedBox(
-                    height: 44,
-                    child: ListView.separated(
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
-                      itemCount: _categories.length + 1,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (context, index) {
-                        if (index == 0) {
-                          final isSelected = _filterCategoryName == null;
-                          return ChoiceChip(
-                            label: const Text('Todas'),
-                            selected: isSelected,
-                            onSelected: (_) => setState(() => _filterCategoryName = null),
-                          );
-                        }
-
-                        final category = _categories[index - 1];
-                        final isSelected = _filterCategoryName == category.name;
-                        return ChoiceChip(
-                          label: Text(category.name),
-                          selected: isSelected,
-                          avatar: CircleAvatar(
-                            backgroundColor: Color(int.parse(category.colorHex, radix: 16)),
-                            child: Icon(iconFromCategoryName(category.iconName), size: 16, color: Colors.white),
+                      physics: const BouncingScrollPhysics(),
+                      clipBehavior: Clip.none,
+                      child: Row(
+                        children: [
+                          // --- BOTÃO TODAS ---
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: ChoiceChip(
+                              label: const Text('Todas'),
+                              selected: _filterCategoryName == null,
+                              showCheckmark: false,
+                              selectedColor: Theme.of(context).colorScheme.primary,
+                              labelStyle: TextStyle(
+                                color: _filterCategoryName == null ? Colors.white : Colors.black87,
+                                fontWeight: _filterCategoryName == null ? FontWeight.bold : FontWeight.normal,
+                              ),
+                              onSelected: (_) => setState(() => _filterCategoryName = null),
+                            ),
                           ),
-                          onSelected: (_) {
-                            setState(() {
-                              _filterCategoryName = isSelected ? null : category.name;
-                            });
-                          },
-                        );
-                      },
+                          // --- BOTÕES DAS CATEGORIAS ---
+                          ..._categories.map((category) {
+                            final isSelected = _filterCategoryName == category.name;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ChoiceChip(
+                                label: Text(category.name),
+                                selected: isSelected,
+                                showCheckmark: false,
+                                avatar: CircleAvatar(
+                                  backgroundColor: isSelected 
+                                      ? Colors.white.withValues(alpha: 0.2) 
+                                      : Color(int.parse(category.colorHex, radix: 16)),
+                                  child: Icon(
+                                    iconFromCategoryName(category.iconName), 
+                                    size: 16, 
+                                    color: Colors.white
+                                  ),
+                                ),
+                                selectedColor: Color(int.parse(category.colorHex, radix: 16)),
+                                labelStyle: TextStyle(
+                                  color: isSelected ? Colors.white : Colors.black87,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                                onSelected: (_) {
+                                  setState(() {
+                                    _filterCategoryName = isSelected ? null : category.name;
+                                  });
+                                },
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
                     ),
                   ),
                 const SizedBox(height: 16),
@@ -503,29 +530,45 @@ class _HomePageState extends State<HomePage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (_categories.isNotEmpty)
-                    SizedBox(
-                      height: 44,
-                      child: ListView.separated(
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        itemCount: _categories.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 8),
-                        itemBuilder: (context, index) {
-                          final category = _categories[index];
-                          final isSelected = _selectedCategoryName == category.name;
-                          return ChoiceChip(
-                            label: Text(category.name),
-                            selected: isSelected,
-                            avatar: CircleAvatar(
-                              backgroundColor: Color(int.parse(category.colorHex, radix: 16)),
-                              child: Icon(iconFromCategoryName(category.iconName), size: 16, color: Colors.white),
-                            ),
-                            onSelected: (_) {
-                              setState(() {
-                                _selectedCategoryName = isSelected ? null : category.name;
-                              });
-                            },
-                          );
-                        },
+                        physics: const BouncingScrollPhysics(),
+                        clipBehavior: Clip.none,
+                        child: Row(
+                          children: _categories.map((category) {
+                            final isSelected = _selectedCategoryName == category.name;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ChoiceChip(
+                                label: Text(category.name),
+                                selected: isSelected,
+                                showCheckmark: false,
+                                avatar: CircleAvatar(
+                                  backgroundColor: isSelected 
+                                      ? Colors.white.withValues(alpha: 0.2) 
+                                      : Color(int.parse(category.colorHex, radix: 16)),
+                                  child: Icon(
+                                    iconFromCategoryName(category.iconName), 
+                                    size: 16, 
+                                    color: Colors.white
+                                  ),
+                                ),
+                                selectedColor: Color(int.parse(category.colorHex, radix: 16)),
+                                labelStyle: TextStyle(
+                                  color: isSelected ? Colors.white : Colors.black87,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                                onSelected: (_) {
+                                  setState(() {
+                                    _selectedCategoryName = isSelected ? null : category.name;
+                                  });
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        ),
                       ),
                     ),
                   const SizedBox(height: 8),
