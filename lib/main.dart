@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/gestures.dart';
 import 'core/routing/app_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const FlowFinanceApp());
+  runApp(const ProviderScope(child: FlowFinanceApp()));
 }
 
 class FlowFinanceApp extends StatelessWidget {
@@ -14,6 +16,14 @@ class FlowFinanceApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'FlowFinance',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        dragDevices: {
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.touch,
+          PointerDeviceKind.stylus,
+          PointerDeviceKind.unknown,
+        },
+      ),
       themeMode: ThemeMode.system,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
