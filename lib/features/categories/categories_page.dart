@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/utils/category_icon_mapper.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../data/database/category_database_service.dart';
 import '../../data/models/category_model.dart';
 
@@ -57,6 +58,12 @@ class _CategoriesPageState extends State<CategoriesPage> {
 
   Future<void> _showCategoryDialog({CategoryModel? category}) async {
     final nameController = TextEditingController(text: category?.name ?? '');
+    final limitController = TextEditingController(
+      text: category != null && category.limitAmountInCents > 0
+          ? (category.limitAmountInCents / 100).toStringAsFixed(2)
+          : '',
+    );
+
     var selectedColor = category != null ? Color(int.parse(category.colorHex, radix: 16)) : _availableColors.first;
     var selectedIcon = category != null ? _iconFromName(category.iconName) : _availableIcons.first;
 
@@ -77,14 +84,16 @@ class _CategoriesPageState extends State<CategoriesPage> {
                       decoration: const InputDecoration(hintText: 'Nome da categoria'),
                     ),
                     const SizedBox(height: 12),
-                    const Text('Ícone atual'),
-                    const SizedBox(height: 8),
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: selectedColor.withValues(alpha: 0.15),
-                      child: Icon(selectedIcon, color: selectedColor),
+                    // --- CAMPO DE META MENSAL ---
+                    TextField(
+                      controller: limitController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Meta de gasto mensal (R\$)',
+                        hintText: 'Ex: 500,00 (Opcional)',
+                      ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     const Text('Cor'),
                     const SizedBox(height: 8),
                     Wrap(
@@ -101,7 +110,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     const Text('Ícone'),
                     const SizedBox(height: 8),
                     Wrap(
@@ -128,11 +137,15 @@ class _CategoriesPageState extends State<CategoriesPage> {
                     final name = nameController.text.trim();
                     if (name.isEmpty) return;
 
+                    final limitValue = double.tryParse(limitController.text.replaceAll(',', '.')) ?? 0;
+                    final limitCents = (limitValue * 100).round();
+
                     final model = CategoryModel(
                       id: category?.id ?? DateTime.now().millisecondsSinceEpoch,
                       name: name,
                       colorHex: selectedColor.value.toRadixString(16).toUpperCase(),
                       iconName: iconNameFromIcon(selectedIcon),
+                      limitAmountInCents: limitCents, // <-- SALVA A META
                     );
 
                     if (category == null) {
@@ -156,10 +169,6 @@ class _CategoriesPageState extends State<CategoriesPage> {
     );
   }
 
-  Future<void> _addCategory() async {
-    await _showCategoryDialog();
-  }
-
   IconData _iconFromName(String? iconName) {
     return iconFromCategoryName(iconName);
   }
@@ -180,6 +189,11 @@ class _CategoriesPageState extends State<CategoriesPage> {
                     child: Icon(_iconFromName(category.iconName), color: Color(int.parse(category.colorHex, radix: 16))),
                   ),
                   title: Text(category.name),
+                  subtitle: Text(
+                    category.limitAmountInCents > 0
+                        ? 'Meta: ${formatCurrency(category.limitAmountInCents)}/mês'
+                        : 'Sem meta definida',
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -200,7 +214,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _addCategory,
+        onPressed: () => _showCategoryDialog(),
         child: const Icon(Icons.add),
       ),
     );

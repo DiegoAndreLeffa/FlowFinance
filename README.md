@@ -19,8 +19,6 @@ O projeto já possui uma base funcional do MVP com:
 
 A seguir estão os itens que ainda precisam ser finalizados para fechar o MVP de forma mais completa:
 
-- [ ] Adicionar opção de excluir/limpar todo o histórico com confirmação
-- [ ] Criar uma tela de resumo mais completa com metas e insights simples
 - [ ] Melhorar o fluxo de backup/importação com upload/download de arquivo real
 - [ ] Adicionar testes automatizados para mais cenários de negócio
 - [ ] Polir a interface e a experiência para uso diário
