@@ -12,7 +12,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final DatabaseService _databaseService = DatabaseService();
-  String _statusMessage = 'Pronto para exportar ou importar os dados.';
+  String _statusMessage = 'Pronto para gerenciar seus dados.';
 
   Future<void> _exportData() async {
     final payload = await _databaseService.exportToJson();
@@ -56,29 +56,100 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Future<void> _showClearHistoryDialog() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Apagar Tudo?'),
+            ],
+          ),
+          content: const Text(
+            'Tem certeza de que deseja apagar todo o histórico de transações e o saldo inicial?\n\nSuas categorias NÃO serão apagadas.\nEsta ação não pode ser desfeita.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Sim, apagar tudo'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      await _databaseService.clearAllTransactions(); 
+      
+      if (!mounted) return;
+      setState(() {
+        _statusMessage = 'O histórico de transações foi apagado.';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Configurações')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Backup e dados', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Backup e Sincronização', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text(_statusMessage, style: const TextStyle(color: Colors.grey)),
             const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: _exportData,
-              icon: const Icon(Icons.upload_file),
-              label: const Text('Exportar JSON'),
+            
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _exportData,
+                    icon: const Icon(Icons.upload_file),
+                    label: const Text('Exportar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _importData,
+                    icon: const Icon(Icons.download),
+                    label: const Text('Importar'),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
+            
+            const SizedBox(height: 40),
+            const Divider(),
+            const SizedBox(height: 40),
+
+            const Text('Zona de Perigo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red)),
+            const SizedBox(height: 8),
+            const Text('Apague todas as suas transações para começar um mês do zero.', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 20),
+            
             OutlinedButton.icon(
-              onPressed: _importData,
-              icon: const Icon(Icons.download),
-              label: const Text('Importar JSON'),
+              onPressed: _showClearHistoryDialog,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.red,
+                side: const BorderSide(color: Colors.red),
+              ),
+              icon: const Icon(Icons.delete_forever),
+              label: const Text('Limpar todo o Histórico'),
             ),
           ],
         ),

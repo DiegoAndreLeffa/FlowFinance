@@ -67,6 +67,16 @@ class DatabaseService {
     await prefs.setString(_storageKey, payload);
   }
 
+  Future<void> clearAllTransactions() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    await prefs.setInt(_initialBalanceKey, 0);
+    
+    await prefs.setString(_storageKey, '[]');
+    
+    await prefs.setString(_recurringStorageKey, '[]');
+  }
+
   Future<List<RecurringTransactionModel>> getAllRecurringTransactions() async {
     final prefs = await SharedPreferences.getInstance();
     final payload = prefs.getString(_recurringStorageKey);
