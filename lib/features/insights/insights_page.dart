@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/utils/category_icon_mapper.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/database/category_database_service.dart';
 import '../../data/database/database_service.dart';
@@ -21,7 +22,7 @@ class _InsightsPageState extends State<InsightsPage> {
   List<TransactionModel> _transactions = [];
   List<CategoryModel> _categories = [];
   bool _isLoading = true;
-  
+
   DateTime _selectedDate = DateTime.now();
 
   final List<String> _monthNames = [
@@ -38,9 +39,9 @@ class _InsightsPageState extends State<InsightsPage> {
   Future<void> _loadData() async {
     final txs = await _dbService.getAllTransactions();
     final cats = await _catService.getAllCategories();
-    
-    final filteredTxs = txs.where((tx) => 
-      tx.date.month == _selectedDate.month && 
+
+    final filteredTxs = txs.where((tx) =>
+      tx.date.month == _selectedDate.month &&
       tx.date.year == _selectedDate.year
     ).toList();
 
@@ -80,12 +81,12 @@ class _InsightsPageState extends State<InsightsPage> {
       }
     }
 
-    if (totalExpense == 0) return []; 
+    if (totalExpense == 0) return [];
 
     List<PieChartSectionData> sections = [];
     expensesByCategory.forEach((catName, amount) {
       final category = _categories.firstWhere(
-        (c) => c.name == catName, 
+        (c) => c.name == catName,
         orElse: () => CategoryModel(name: 'Outros', colorHex: 'FF9E9E9E', iconName: '')
       );
       final color = Color(int.parse(category.colorHex, radix: 16));
@@ -150,7 +151,7 @@ class _InsightsPageState extends State<InsightsPage> {
         maxDailyTotal = totalOfDay;
       }
     }
-    return maxDailyTotal == 0 ? 100 : maxDailyTotal * 1.2; 
+    return maxDailyTotal == 0 ? 100 : maxDailyTotal * 1.2;
   }
 
   @override
@@ -165,65 +166,108 @@ class _InsightsPageState extends State<InsightsPage> {
     final income = _transactions.where((t) => t.type == 'income').fold<int>(0, (s, t) => s + t.amountInCents.abs());
     final expense = _transactions.where((t) => t.type == 'expense').fold<int>(0, (s, t) => s + t.amountInCents.abs());
 
+    // --- CÁLCULO DOS INSIGHTS RÁPIDOS ---
+    final now = DateTime.now();
+    final daysPassed = (_selectedDate.month == now.month && _selectedDate.year == now.year) ? now.day : 30;
+    final dailyAverageCents = expense > 0 ? (expense / daysPassed).round() : 0;
+
+    int highestExpenseCents = 0;
+    String highestExpenseDesc = 'Nenhum';
+    for (var tx in _transactions) {
+      if (tx.type == 'expense' && tx.amountInCents.abs() > highestExpenseCents) {
+        highestExpenseCents = tx.amountInCents.abs();
+        highestExpenseDesc = tx.description;
+      }
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Insights')),
+      appBar: AppBar(title: const Text('Resumo & Insights')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // --- 1. NAVEGADOR DE MESES ---
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: _previousMonth,
-                ),
+                IconButton(icon: const Icon(Icons.chevron_left), onPressed: _previousMonth),
                 Text(
                   '${_monthNames[_selectedDate.month - 1]} ${_selectedDate.year}',
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_right),
-                  onPressed: (_selectedDate.year == DateTime.now().year && _selectedDate.month == DateTime.now().month) 
-                      ? null 
+                  onPressed: (_selectedDate.year == DateTime.now().year && _selectedDate.month == DateTime.now().month)
+                      ? null
                       : _nextMonth,
                 ),
               ],
             ),
             const SizedBox(height: 16),
 
+            // --- 2. CARDS DE ENTRADAS E SAÍDAS ---
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Expanded(child: _buildSummaryCard('Entradas', income, Colors.green)),
                 const SizedBox(width: 12),
                 Expanded(child: _buildSummaryCard('Saídas', expense, Colors.red)),
               ],
             ),
+            const SizedBox(height: 24),
+
+            // --- 3. PAINEL DE INSIGHTS RÁPIDOS ---
+            const Text('Insights do Mês', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildInsightCard(
+                    icon: Icons.calendar_today_outlined,
+                    title: 'Média diária',
+                    value: formatCurrency(dailyAverageCents),
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildInsightCard(
+                    icon: Icons.shopping_bag_outlined,
+                    title: 'Maior gasto',
+                    value: formatCurrency(highestExpenseCents),
+                    subtitle: highestExpenseDesc,
+                    color: Colors.orange,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 32),
 
+            // --- 4. SEÇÃO DE METAS POR CATEGORIA (ORÇAMENTO) ---
+            const Text('Metas e Limites', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            const Text('Acompanhe o seu limite mensal de gastos', style: TextStyle(color: Colors.grey, fontSize: 13)),
+            const SizedBox(height: 16),
+            
+            _buildGoalsList(),
+
+            const SizedBox(height: 32),
+
+            // --- 5. GRÁFICO DE PIZZA ---
             const Text('Despesas por Categoria', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             if (!hasExpenses)
-              const Center(child: Padding(
-                padding: EdgeInsets.all(24.0),
-                child: Text('Nenhuma despesa este mês.', style: TextStyle(color: Colors.grey)),
-              ))
+              const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text('Nenhuma despesa este mês.', style: TextStyle(color: Colors.grey))))
             else
               Column(
                 children: [
                   SizedBox(
-                    height: 200,
+                    height: 180,
                     child: PieChart(
-                      PieChartData(
-                        sections: pieData,
-                        centerSpaceRadius: 40,
-                        sectionsSpace: 2,
-                      ),
+                      PieChartData(sections: pieData, centerSpaceRadius: 35, sectionsSpace: 2),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Wrap(
                     spacing: 12,
                     runSpacing: 8,
@@ -232,7 +276,7 @@ class _InsightsPageState extends State<InsightsPage> {
                       return Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(width: 12, height: 12, decoration: BoxDecoration(color: section.color, shape: BoxShape.circle)),
+                          Container(width: 10, height: 10, decoration: BoxDecoration(color: section.color, shape: BoxShape.circle)),
                           const SizedBox(width: 4),
                           Text(cat.name, style: const TextStyle(fontSize: 12)),
                         ],
@@ -241,22 +285,15 @@ class _InsightsPageState extends State<InsightsPage> {
                   ),
                 ],
               ),
-            
-            const SizedBox(height: 40),
 
+            const SizedBox(height: 32),
+
+            // --- 6. GRÁFICO DE BARRAS ---
             const Text('Padrão Semanal', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            const Text('Em quais dias você mais gasta no mês', style: TextStyle(fontSize: 14, color: Colors.grey)),
-            const SizedBox(height: 24),
-            
-            if (!hasExpenses)
-              const Center(child: Padding(
-                padding: EdgeInsets.all(24.0),
-                child: Text('Sem dados suficientes.', style: TextStyle(color: Colors.grey)),
-              ))
-            else
+            const SizedBox(height: 16),
+            if (hasExpenses)
               SizedBox(
-                height: 200,
+                height: 180,
                 child: BarChart(
                   BarChartData(
                     alignment: BarChartAlignment.spaceAround,
@@ -294,26 +331,149 @@ class _InsightsPageState extends State<InsightsPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 40),
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
   }
 
+  // --- WIDGET PARA RENDERIZAR AS BARRAS DE PROGRESO DE METAS ---
+  Widget _buildGoalsList() {
+    final categoriesWithGoals = _categories.where((c) => c.limitAmountInCents > 0).toList();
+
+    if (categoriesWithGoals.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.grey),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Nenhuma meta definida. Edite uma categoria para definir um limite de gastos.',
+                style: TextStyle(color: Colors.grey, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: categoriesWithGoals.map((cat) {
+        // Soma o quanto já foi gasto nesta categoria no mês selecionado
+        final spentInCat = _transactions
+            .where((tx) => tx.type == 'expense' && tx.categoryName == cat.name)
+            .fold<int>(0, (sum, tx) => sum + tx.amountInCents.abs());
+
+        final limit = cat.limitAmountInCents;
+        final progress = (spentInCat / limit).clamp(0.0, 1.0);
+        final isOverLimit = spentInCat > limit;
+
+        // Cor dinâmica: Verde (<70%), Amarelo (70-99%), Vermelho (>=100%)
+        Color progressColor = Colors.green;
+        if (progress >= 0.7 && progress < 1.0) progressColor = Colors.amber.shade700;
+        if (isOverLimit) progressColor = Colors.red;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(iconFromCategoryName(cat.iconName), size: 18, color: Color(int.parse(cat.colorHex, radix: 16))),
+                      const SizedBox(width: 8),
+                      Text(cat.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  Text(
+                    '${formatCurrency(spentInCat)} / ${formatCurrency(limit)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isOverLimit ? Colors.red : Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 8,
+                  backgroundColor: Colors.grey.shade200,
+                  color: progressColor,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   Widget _buildSummaryCard(String title, int amountInCents, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Text(formatCurrency(amountInCents), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInsightCard({
+    required IconData icon,
+    required String title,
+    required String value,
+    String? subtitle,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: color.withValues(alpha: 0.15),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                if (subtitle != null)
+                  Text(subtitle, style: const TextStyle(fontSize: 10, color: Colors.grey), overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          ),
         ],
       ),
     );
