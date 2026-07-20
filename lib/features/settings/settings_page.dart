@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../../data/database/database_service.dart';
 
@@ -15,45 +18,73 @@ class _SettingsPageState extends State<SettingsPage> {
   String _statusMessage = 'Pronto para gerenciar seus dados.';
 
   Future<void> _exportData() async {
-    final payload = await _databaseService.exportToJson();
-    await Clipboard.setData(ClipboardData(text: payload));
-    if (!mounted) return;
-    setState(() {
-      _statusMessage = 'Dados exportados para a área de transferência.';
-    });
+    try {
+      final payload = await _databaseService.exportToJson();
+      
+      final List<int> bytes = utf8.encode(payload);
+      final date = DateTime.now().toIso8601String().split('T').first;
+      final fileName = 'flowfinance_backup_$date.json';
+
+      final xFile = XFile.fromData(
+        Uint8List.fromList(bytes),
+        name: fileName,
+        mimeType: 'application/json',
+      );
+
+      final result = await Share.shareXFiles(
+        [xFile],
+        text: 'Backup FlowFinance - $date',
+      );
+
+      if (result.status == ShareResultStatus.success) {
+        if (!mounted) return;
+        setState(() {
+          _statusMessage = 'Backup salvo com sucesso!';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'Erro ao exportar: $e';
+      });
+    }
   }
 
   Future<void> _importData() async {
-    final controller = TextEditingController();
-    await showDialog<void>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Importar dados'),
-          content: TextField(
-            controller: controller,
-            maxLines: 5,
-            decoration: const InputDecoration(hintText: 'Cole o JSON aqui'),
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+        withData: true,
+      );
+
+      if (result != null && result.files.single.bytes != null) {
+        final payload = utf8.decode(result.files.single.bytes!);
+
+        if (payload.isEmpty) return;
+
+        await _databaseService.importFromJson(payload);
+
+        if (!mounted) return;
+        setState(() {
+          _statusMessage = 'Dados restaurados com sucesso!';
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Backup restaurado! Volte à tela inicial para ver os dados.'),
+            backgroundColor: Colors.green,
           ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-            FilledButton(
-              onPressed: () async {
-                final payload = controller.text.trim();
-                if (payload.isEmpty) return;
-                await _databaseService.importFromJson(payload);
-                if (!context.mounted) return;
-                Navigator.pop(context);
-                setState(() {
-                  _statusMessage = 'Dados importados com sucesso.';
-                });
-              },
-              child: const Text('Importar'),
-            ),
-          ],
         );
-      },
-    );
+      } else {
+        setState(() {
+          _statusMessage = 'Importação cancelada.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'Erro ao importar: O arquivo é inválido ou está corrompido.';
+      });
+    }
   }
 
   Future<void> _showClearHistoryDialog() async {
@@ -90,8 +121,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     if (confirm == true) {
-      await _databaseService.clearAllTransactions(); 
-      
+      await _databaseService.clearAllTransactions();
       if (!mounted) return;
       setState(() {
         _statusMessage = 'O histórico de transações foi apagado.';
@@ -112,14 +142,13 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 8),
             Text(_statusMessage, style: const TextStyle(color: Colors.grey)),
             const SizedBox(height: 20),
-            
             Row(
               children: [
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: _exportData,
                     icon: const Icon(Icons.upload_file),
-                    label: const Text('Exportar'),
+                    label: const Text('Exportar Arquivo'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -127,21 +156,18 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: OutlinedButton.icon(
                     onPressed: _importData,
                     icon: const Icon(Icons.download),
-                    label: const Text('Importar'),
+                    label: const Text('Restaurar Arquivo'),
                   ),
                 ),
               ],
             ),
-            
             const SizedBox(height: 40),
             const Divider(),
             const SizedBox(height: 40),
-
             const Text('Zona de Perigo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red)),
             const SizedBox(height: 8),
             const Text('Apague todas as suas transações para começar um mês do zero.', style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 20),
-            
             OutlinedButton.icon(
               onPressed: _showClearHistoryDialog,
               style: OutlinedButton.styleFrom(
