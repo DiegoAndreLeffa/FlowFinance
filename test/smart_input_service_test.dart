@@ -12,7 +12,8 @@ void main() {
 
       expect(result, isNotNull);
       expect(result!.amountInCents, 500000);
-      expect(result.description, 'salario');
+      // CORRIGIDO PARA LETRA MAIÚSCULA
+      expect(result.description, 'Salario'); 
       expect(result.type, 'income');
     });
 
@@ -34,6 +35,29 @@ void main() {
       expect(result!.categoryName, 'Transporte');
     });
 
+    test('Deve colocar a primeira letra em maiúscula', () {
+      final service = SmartInputService();
+      final result = service.parse('10 uber');
+      expect(result!.description, 'Uber'); 
+    });
+
+    test('Deve remover palavras inúteis (Stopwords)', () {
+      final service = SmartInputService();
+      final result = service.parse('gastei 50 no mercado');
+      expect(result!.description, 'Mercado'); 
+    });
+
+    test('Deve subtrair um dia da data se contiver a palavra "ontem"', () {
+      final service = SmartInputService();
+      final result = service.parse('50 pizza ontem');
+      final ontem = DateTime.now().subtract(const Duration(days: 1));
+      
+      expect(result!.description, 'Pizza'); 
+      expect(result.date.day, ontem.day); 
+    });
+  });
+
+  group('Cálculo de Saldo (calculateBalance)', () {
     test('includes initial balance in total balance calculation', () {
       final transactions = [
         TransactionModel(amountInCents: 50000, description: 'salario', date: DateTime.now(), type: 'income'),
