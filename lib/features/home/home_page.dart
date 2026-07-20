@@ -13,6 +13,7 @@ import '../../domain/services/smart_input_service.dart';
 import '../categories/categories_page.dart';
 import '../settings/settings_page.dart';
 import 'home_providers.dart';
+import '../../main.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -299,28 +300,76 @@ class _HomePageState extends State<HomePage> {
             icon: const Icon(Icons.account_balance_wallet_outlined),
             onPressed: _showInitialBalanceDialog,
           ),
-          IconButton(
-            icon: const Icon(Icons.pie_chart_outline),
-            onPressed: () async {
-              await context.push('/insights');
-              _loadTransactions(); 
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.category_outlined),
-            onPressed: () async {
-              await context.push('/categories');
-              _loadTransactions();
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () async {
-              await context.push('/settings');
-              _loadTransactions();
-            },
-          ),
         ],
+      ),
+      drawer: Drawer(
+        child: Column(
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.account_balance_wallet, size: 48, color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(height: 8),
+                    const Text('FlowFinance', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.pie_chart_outline),
+              title: const Text('Resumo & Insights'),
+              onTap: () async {
+                Navigator.pop(context);
+                await context.push('/insights');
+                _loadTransactions();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.category_outlined),
+              title: const Text('Categorias'),
+              onTap: () async {
+                Navigator.pop(context);
+                await context.push('/categories');
+                _loadTransactions();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings_outlined),
+              title: const Text('Configurações'),
+              onTap: () async {
+                Navigator.pop(context);
+                await context.push('/settings');
+                _loadTransactions();
+              },
+            ),
+            
+            const Spacer(),
+            const Divider(),
+            
+            ValueListenableBuilder<ThemeMode>(
+              valueListenable: themeNotifier, 
+              builder: (context, currentMode, child) {
+                final isDark = currentMode == ThemeMode.dark || 
+                    (currentMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
+                
+                return SwitchListTile(
+                  secondary: Icon(isDark ? Icons.dark_mode : Icons.light_mode, color: isDark ? Colors.amber : Colors.orange),
+                  title: const Text('Modo Escuro'),
+                  value: isDark,
+                  onChanged: (value) {
+                    themeNotifier.value = value ? ThemeMode.dark : ThemeMode.light;
+                  },
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
       body: Column(
         children: [
@@ -335,7 +384,7 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
-                    color: currentBalance < 0 ? Colors.red : Colors.black,
+                    color: currentBalance < 0 ? Colors.red : Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -376,33 +425,32 @@ class _HomePageState extends State<HomePage> {
                       clipBehavior: Clip.none,
                       child: Row(
                         children: [
-                          // --- BOTÃO TODAS ---
                           Padding(
                             padding: const EdgeInsets.only(right: 8.0),
                             child: ChoiceChip(
-                              label: const Text('Todas'),
+                              label: const Text('Todas', overflow: TextOverflow.visible),
                               selected: _filterCategoryName == null,
                               showCheckmark: false,
                               selectedColor: Theme.of(context).colorScheme.primary,
                               labelStyle: TextStyle(
-                                color: _filterCategoryName == null ? Colors.white : Colors.black87,
+                                color: _filterCategoryName == null ? Colors.white : Theme.of(context).colorScheme.onSurface,
                                 fontWeight: _filterCategoryName == null ? FontWeight.bold : FontWeight.normal,
                               ),
                               onSelected: (_) => setState(() => _filterCategoryName = null),
                             ),
                           ),
-                          // --- BOTÕES DAS CATEGORIAS ---
                           ..._categories.map((category) {
                             final isSelected = _filterCategoryName == category.name;
                             return Padding(
                               padding: const EdgeInsets.only(right: 8.0),
                               child: ChoiceChip(
-                                label: Text(category.name),
+                                label: Text(category.name, overflow: TextOverflow.visible), 
+                                labelPadding: const EdgeInsets.only(left: 4, right: 8),
                                 selected: isSelected,
                                 showCheckmark: false,
                                 avatar: CircleAvatar(
                                   backgroundColor: isSelected 
-                                      ? Colors.white.withValues(alpha: 0.2) 
+                                      ? Colors.white.withOpacity(0.2) 
                                       : Color(int.parse(category.colorHex, radix: 16)),
                                   child: Icon(
                                     iconFromCategoryName(category.iconName), 
@@ -412,7 +460,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 selectedColor: Color(int.parse(category.colorHex, radix: 16)),
                                 labelStyle: TextStyle(
-                                  color: isSelected ? Colors.white : Colors.black87,
+                                  color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
                                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                 ),
                                 onSelected: (_) {
@@ -434,7 +482,7 @@ class _HomePageState extends State<HomePage> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.red.shade50,
+                          color: Colors.red.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -451,7 +499,7 @@ class _HomePageState extends State<HomePage> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.green.shade50,
+                          color: Colors.red.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -472,8 +520,23 @@ class _HomePageState extends State<HomePage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : filteredTransactions.isEmpty
-                    ? const Center(
-                        child: Text('Nenhuma transação para este filtro.', style: TextStyle(color: Colors.grey)),
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey.shade300),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Nenhuma transação encontrada',
+                              style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Seus registros aparecerão aqui.',
+                              style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                            ),
+                          ],
+                        ),
                       )
                     : ListView.builder(
                         itemCount: filteredTransactions.length,
@@ -484,29 +547,53 @@ class _HomePageState extends State<HomePage> {
                             orElse: () => CategoryModel(name: 'Sem categoria', colorHex: 'FF9E9E9E', iconName: 'category'),
                           );
 
-                          return Dismissible(
-                            key: ValueKey(tx.id == 0 ? '${tx.description}-${tx.date.toIso8601String()}' : tx.id),
-                            background: Container(
-                              color: Colors.red,
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.only(right: 20),
-                              child: const Icon(Icons.delete, color: Colors.white),
+                          return Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.03),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
-                            onDismissed: (_) async {
-                              await _databaseService.deleteTransaction(tx.id);
-                              await _loadTransactions();
-                            },
-                            child: ListTile(
-                              onTap: () => _showEditDialog(tx),
-                              leading: CircleAvatar(
-                                backgroundColor: Color(int.parse(category.colorHex, radix: 16)).withValues(alpha: 0.1),
-                                child: Icon(iconFromCategoryName(category.iconName), color: Color(int.parse(category.colorHex, radix: 16))),
-                              ),
-                              title: Text(tx.description),
-                              subtitle: Text('${tx.date.day}/${tx.date.month}/${tx.date.year}${tx.categoryName != null ? ' • ${tx.categoryName}' : ''}'),
-                              trailing: Text(
-                                _isBalanceVisible ? formatCurrency(tx.amountInCents) : 'R\$ •••••',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Dismissible(
+                                key: ValueKey(tx.id == 0 ? '${tx.description}-${tx.date.toIso8601String()}' : tx.id),
+                                direction: DismissDirection.endToStart,
+                                background: Container(
+                                  color: Colors.red.shade400,
+                                  alignment: Alignment.centerRight,
+                                  padding: const EdgeInsets.only(right: 24),
+                                  child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
+                                ),
+                                onDismissed: (_) async {
+                                  await _databaseService.deleteTransaction(tx.id);
+                                  await _loadTransactions();
+                                },
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  onTap: () => _showEditDialog(tx),
+                                  leading: CircleAvatar(
+                                    radius: 24,
+                                    backgroundColor: Color(int.parse(category.colorHex, radix: 16)).withOpacity(0.15),
+                                    child: Icon(iconFromCategoryName(category.iconName), color: Color(int.parse(category.colorHex, radix: 16))),
+                                  ),
+                                  title: Text(tx.description, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  subtitle: Text('${tx.date.day.toString().padLeft(2, '0')}/${tx.date.month.toString().padLeft(2, '0')} • ${tx.categoryName ?? 'Outros'}'),
+                                  trailing: Text(
+                                    _isBalanceVisible ? formatCurrency(tx.amountInCents) : 'R\$ •••••',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold, 
+                                      fontSize: 16,
+                                      color: tx.type == 'income' ? Colors.green : Theme.of(context).colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           );
@@ -542,12 +629,13 @@ class _HomePageState extends State<HomePage> {
                             return Padding(
                               padding: const EdgeInsets.only(right: 8.0),
                               child: ChoiceChip(
-                                label: Text(category.name),
+                                label: Text(category.name, overflow: TextOverflow.visible), 
+                                labelPadding: const EdgeInsets.only(left: 4, right: 8),
                                 selected: isSelected,
                                 showCheckmark: false,
                                 avatar: CircleAvatar(
                                   backgroundColor: isSelected 
-                                      ? Colors.white.withValues(alpha: 0.2) 
+                                      ? Colors.white.withOpacity(0.2) 
                                       : Color(int.parse(category.colorHex, radix: 16)),
                                   child: Icon(
                                     iconFromCategoryName(category.iconName), 
@@ -557,7 +645,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 selectedColor: Color(int.parse(category.colorHex, radix: 16)),
                                 labelStyle: TextStyle(
-                                  color: isSelected ? Colors.white : Colors.black87,
+                                  color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
                                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                 ),
                                 onSelected: (_) {

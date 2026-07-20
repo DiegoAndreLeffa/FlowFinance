@@ -166,7 +166,6 @@ class _InsightsPageState extends State<InsightsPage> {
     final income = _transactions.where((t) => t.type == 'income').fold<int>(0, (s, t) => s + t.amountInCents.abs());
     final expense = _transactions.where((t) => t.type == 'expense').fold<int>(0, (s, t) => s + t.amountInCents.abs());
 
-    // --- CÁLCULO DOS INSIGHTS RÁPIDOS ---
     final now = DateTime.now();
     final daysPassed = (_selectedDate.month == now.month && _selectedDate.year == now.year) ? now.day : 30;
     final dailyAverageCents = expense > 0 ? (expense / daysPassed).round() : 0;
@@ -187,7 +186,6 @@ class _InsightsPageState extends State<InsightsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- 1. NAVEGADOR DE MESES ---
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -206,7 +204,6 @@ class _InsightsPageState extends State<InsightsPage> {
             ),
             const SizedBox(height: 16),
 
-            // --- 2. CARDS DE ENTRADAS E SAÍDAS ---
             Row(
               children: [
                 Expanded(child: _buildSummaryCard('Entradas', income, Colors.green)),
@@ -216,7 +213,6 @@ class _InsightsPageState extends State<InsightsPage> {
             ),
             const SizedBox(height: 24),
 
-            // --- 3. PAINEL DE INSIGHTS RÁPIDOS ---
             const Text('Insights do Mês', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             Row(
@@ -243,7 +239,6 @@ class _InsightsPageState extends State<InsightsPage> {
             ),
             const SizedBox(height: 32),
 
-            // --- 4. SEÇÃO DE METAS POR CATEGORIA (ORÇAMENTO) ---
             const Text('Metas e Limites', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
             const Text('Acompanhe o seu limite mensal de gastos', style: TextStyle(color: Colors.grey, fontSize: 13)),
@@ -253,7 +248,6 @@ class _InsightsPageState extends State<InsightsPage> {
 
             const SizedBox(height: 32),
 
-            // --- 5. GRÁFICO DE PIZZA ---
             const Text('Despesas por Categoria', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             if (!hasExpenses)
@@ -288,7 +282,6 @@ class _InsightsPageState extends State<InsightsPage> {
 
             const SizedBox(height: 32),
 
-            // --- 6. GRÁFICO DE BARRAS ---
             const Text('Padrão Semanal', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             if (hasExpenses)
@@ -338,7 +331,6 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
-  // --- WIDGET PARA RENDERIZAR AS BARRAS DE PROGRESO DE METAS ---
   Widget _buildGoalsList() {
     final categoriesWithGoals = _categories.where((c) => c.limitAmountInCents > 0).toList();
 
@@ -346,7 +338,7 @@ class _InsightsPageState extends State<InsightsPage> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
         ),
         child: const Row(
@@ -366,7 +358,6 @@ class _InsightsPageState extends State<InsightsPage> {
 
     return Column(
       children: categoriesWithGoals.map((cat) {
-        // Soma o quanto já foi gasto nesta categoria no mês selecionado
         final spentInCat = _transactions
             .where((tx) => tx.type == 'expense' && tx.categoryName == cat.name)
             .fold<int>(0, (sum, tx) => sum + tx.amountInCents.abs());
@@ -375,7 +366,6 @@ class _InsightsPageState extends State<InsightsPage> {
         final progress = (spentInCat / limit).clamp(0.0, 1.0);
         final isOverLimit = spentInCat > limit;
 
-        // Cor dinâmica: Verde (<70%), Amarelo (70-99%), Vermelho (>=100%)
         Color progressColor = Colors.green;
         if (progress >= 0.7 && progress < 1.0) progressColor = Colors.amber.shade700;
         if (isOverLimit) progressColor = Colors.red;
