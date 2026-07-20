@@ -84,7 +84,6 @@ class _CategoriesPageState extends State<CategoriesPage> {
                       decoration: const InputDecoration(hintText: 'Nome da categoria'),
                     ),
                     const SizedBox(height: 12),
-                    // --- CAMPO DE META MENSAL ---
                     TextField(
                       controller: limitController,
                       keyboardType: TextInputType.number,
@@ -145,7 +144,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                       name: name,
                       colorHex: selectedColor.value.toRadixString(16).toUpperCase(),
                       iconName: iconNameFromIcon(selectedIcon),
-                      limitAmountInCents: limitCents, // <-- SALVA A META
+                      limitAmountInCents: limitCents,
                     );
 
                     if (category == null) {

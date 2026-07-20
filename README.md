@@ -19,7 +19,6 @@ O projeto já possui uma base funcional do MVP com:
 
 A seguir estão os itens que ainda precisam ser finalizados para fechar o MVP de forma mais completa:
 
-- [ ] Polir a interface e a experiência para uso diário
 - [ ] Autenticação por Biometria/Digital
 
 ## Erros atuais
