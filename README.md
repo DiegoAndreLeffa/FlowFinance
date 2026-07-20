@@ -19,11 +19,8 @@ O projeto já possui uma base funcional do MVP com:
 
 A seguir estão os itens que ainda precisam ser finalizados para fechar o MVP de forma mais completa:
 
-- [ ] Melhorar o fluxo de backup/importação com upload/download de arquivo real
-- [ ] Adicionar testes automatizados para mais cenários de negócio
 - [ ] Polir a interface e a experiência para uso diário
 - [ ] Autenticação por Biometria/Digital
-
 
 ## Erros atuais
 
