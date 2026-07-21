@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 
 import '../../data/database/database_service.dart';
+import '../../core/security/auth_service.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -160,6 +161,35 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ],
+            ),
+            const Text('Segurança e Privacidade', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Proteja seus dados com biometria.', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 12),
+            
+            FutureBuilder<bool>(
+              future: AuthService().isProtectionEnabled(),
+              builder: (context, snapshot) {
+                final isEnabled = snapshot.data ?? false;
+                return SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  secondary: const Icon(Icons.fingerprint, color: Colors.blue),
+                  title: const Text('Bloqueio por Biometria/PIN'),
+                  value: isEnabled,
+                  onChanged: (value) async {
+                    if (value) {
+                      final success = await AuthService().authenticate();
+                      if (success) {
+                        await AuthService().setProtectionEnabled(true);
+                        setState(() {});
+                      }
+                    } else {
+                      await AuthService().setProtectionEnabled(false);
+                      setState(() {});
+                    }
+                  },
+                );
+              }
             ),
             const SizedBox(height: 40),
             const Divider(),
