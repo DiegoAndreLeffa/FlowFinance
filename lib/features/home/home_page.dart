@@ -87,7 +87,7 @@ class _HomePageState extends State<HomePage> {
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
-          duration: const Duration(seconds: 2), // Some mais rápido
+          duration: const Duration(seconds: 2),
         ),
       );
       return;
@@ -172,7 +172,9 @@ class _HomePageState extends State<HomePage> {
   Future<void> _showRecurringDialog() async {
     final descriptionController = TextEditingController();
     final valueController = TextEditingController();
-    final frequencyController = TextEditingController(text: 'monthly');
+    
+    String selectedFrequency = 'monthly'; 
+    String selectedType = 'expense';
     String? selectedCategoryName = _selectedCategoryName;
 
     await showDialog<void>(
@@ -181,35 +183,108 @@ class _HomePageState extends State<HomePage> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Nova recorrência'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
+              title: const Row(
                 children: [
-                  TextField(controller: descriptionController, decoration: const InputDecoration(labelText: 'Descrição')),
-                  TextField(controller: valueController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Valor')),
-                  TextField(controller: frequencyController, decoration: const InputDecoration(labelText: 'Frequência (daily/weekly/monthly)')),
-                  const SizedBox(height: 12),
-                  if (_categories.isNotEmpty)
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                  Icon(Icons.repeat, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Text('Nova Recorrência', style: TextStyle(fontSize: 18)),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    
+                    const Text('Tipo de transação', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(height: 8),
+                    Row(
                       children: [
-                        ChoiceChip(
-                          label: const Text('Sem categoria'),
-                          selected: selectedCategoryName == null,
-                          onSelected: (_) => setDialogState(() => selectedCategoryName = null),
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Center(child: Text('Despesa')),
+                            selected: selectedType == 'expense',
+                            selectedColor: Colors.red.shade100,
+                            labelStyle: TextStyle(color: selectedType == 'expense' ? Colors.red.shade900 : Theme.of(context).colorScheme.onSurface),
+                            onSelected: (_) => setDialogState(() => selectedType = 'expense'),
+                          ),
                         ),
-                        ..._categories.map((category) {
-                          final isSelected = selectedCategoryName == category.name;
-                          return ChoiceChip(
-                            label: Text(category.name),
-                            selected: isSelected,
-                            onSelected: (_) => setDialogState(() => selectedCategoryName = isSelected ? null : category.name),
-                          );
-                        }),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Center(child: Text('Receita')),
+                            selected: selectedType == 'income',
+                            selectedColor: Colors.green.shade100,
+                            labelStyle: TextStyle(color: selectedType == 'income' ? Colors.green.shade900 : Theme.of(context).colorScheme.onSurface),
+                            onSelected: (_) => setDialogState(() => selectedType = 'income'),
+                          ),
+                        ),
                       ],
                     ),
-                ],
+                    const SizedBox(height: 16),
+
+                    TextField(
+                      controller: descriptionController, 
+                      decoration: const InputDecoration(labelText: 'Descrição (Ex: Netflix, Salário)', border: OutlineInputBorder()),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: valueController, 
+                      keyboardType: TextInputType.number, 
+                      decoration: const InputDecoration(labelText: 'Valor (R\$)', border: OutlineInputBorder()),
+                    ),
+                    const SizedBox(height: 16),
+
+                    const Text('Frequência', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('Diário'),
+                          selected: selectedFrequency == 'daily',
+                          onSelected: (_) => setDialogState(() => selectedFrequency = 'daily'),
+                        ),
+                        ChoiceChip(
+                          label: const Text('Semanal'),
+                          selected: selectedFrequency == 'weekly',
+                          onSelected: (_) => setDialogState(() => selectedFrequency = 'weekly'),
+                        ),
+                        ChoiceChip(
+                          label: const Text('Mensal'),
+                          selected: selectedFrequency == 'monthly',
+                          onSelected: (_) => setDialogState(() => selectedFrequency = 'monthly'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    if (_categories.isNotEmpty) ...[
+                      const Text('Categoria', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          ChoiceChip(
+                            label: const Text('Nenhuma'),
+                            selected: selectedCategoryName == null,
+                            onSelected: (_) => setDialogState(() => selectedCategoryName = null),
+                          ),
+                          ..._categories.map((category) {
+                            final isSelected = selectedCategoryName == category.name;
+                            return ChoiceChip(
+                              label: Text(category.name),
+                              selected: isSelected,
+                              selectedColor: Color(int.parse(category.colorHex, radix: 16)).withOpacity(0.2),
+                              onSelected: (_) => setDialogState(() => selectedCategoryName = isSelected ? null : category.name),
+                            );
+                          }),
+                        ],
+                      ),
+                    ]
+                  ],
+                ),
               ),
               actions: [
                 TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
@@ -217,16 +292,16 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () async {
                     final description = descriptionController.text.trim();
                     final amount = double.tryParse(valueController.text.replaceAll(',', '.')) ?? 0;
-                    final frequency = frequencyController.text.trim().isEmpty ? 'monthly' : frequencyController.text.trim();
+                    
                     if (description.isEmpty || amount <= 0) return;
 
                     final recurring = RecurringTransactionModel(
                       id: DateTime.now().millisecondsSinceEpoch,
                       amountInCents: (amount * 100).round(),
                       description: description,
-                      type: 'expense',
+                      type: selectedType,
                       categoryName: selectedCategoryName,
-                      frequency: frequency,
+                      frequency: selectedFrequency,
                       startDate: DateTime.now(),
                       nextDueDate: DateTime.now(),
                     );
@@ -397,145 +472,150 @@ class _HomePageState extends State<HomePage> {
         behavior: HitTestBehavior.opaque,
             child: Column(
               children: [
-                const Text('Saldo Atual', style: TextStyle(fontSize: 16, color: Colors.grey)),
-                const SizedBox(height: 8),
-                Text(
-                  _isBalanceVisible ? formatCurrency(currentBalance) : 'R\$ •••••',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: currentBalance < 0 ? Colors.red : Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    ChoiceChip(
-                      label: const Text('Todos'),
-                      selected: _selectedPeriod == 'all',
-                      onSelected: (_) => setState(() => _selectedPeriod = 'all'),
-                    ),
-                    ChoiceChip(
-                      label: const Text('Hoje'),
-                      selected: _selectedPeriod == 'day',
-                      onSelected: (_) => setState(() => _selectedPeriod = 'day'),
-                    ),
-                    ChoiceChip(
-                      label: const Text('Semana'),
-                      selected: _selectedPeriod == 'week',
-                      onSelected: (_) => setState(() => _selectedPeriod = 'week'),
-                    ),
-                    ChoiceChip(
-                      label: const Text('Mês'),
-                      selected: _selectedPeriod == 'month',
-                      onSelected: (_) => setState(() => _selectedPeriod = 'month'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const SizedBox(height: 12),
-                if (_categories.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      clipBehavior: Clip.none,
-                      child: Row(
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column (
+                    children: [
+                      const Text('Saldo Atual', style: TextStyle(fontSize: 16, color: Colors.grey)),
+                      const SizedBox(height: 8),
+                      Text(
+                        _isBalanceVisible ? formatCurrency(currentBalance) : 'R\$ •••••',
+                        style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          color: currentBalance < 0 ? Colors.red : Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: ChoiceChip(
-                              label: const Text('Todas', overflow: TextOverflow.visible),
-                              selected: _filterCategoryName == null,
-                              showCheckmark: false,
-                              selectedColor: Theme.of(context).colorScheme.primary,
-                              labelStyle: TextStyle(
-                                color: _filterCategoryName == null ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                                fontWeight: _filterCategoryName == null ? FontWeight.bold : FontWeight.normal,
-                              ),
-                              onSelected: (_) => setState(() => _filterCategoryName = null),
-                            ),
+                          ChoiceChip(
+                            label: const Text('Todos'),
+                            selected: _selectedPeriod == 'all',
+                            onSelected: (_) => setState(() => _selectedPeriod = 'all'),
                           ),
-                          ..._categories.map((category) {
-                            final isSelected = _filterCategoryName == category.name;
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: ChoiceChip(
-                                label: Text(category.name, overflow: TextOverflow.visible), 
-                                labelPadding: const EdgeInsets.only(left: 4, right: 8),
-                                selected: isSelected,
-                                showCheckmark: false,
-                                avatar: CircleAvatar(
-                                  backgroundColor: isSelected 
-                                      ? Colors.white.withOpacity(0.2) 
-                                      : Color(int.parse(category.colorHex, radix: 16)),
-                                  child: Icon(
-                                    iconFromCategoryName(category.iconName), 
-                                    size: 16, 
-                                    color: Colors.white
-                                  ),
-                                ),
-                                selectedColor: Color(int.parse(category.colorHex, radix: 16)),
-                                labelStyle: TextStyle(
-                                  color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                ),
-                                onSelected: (_) {
-                                  setState(() {
-                                    _filterCategoryName = isSelected ? null : category.name;
-                                  });
-                                },
-                              ),
-                            );
-                          }),
+                          ChoiceChip(
+                            label: const Text('Hoje'),
+                            selected: _selectedPeriod == 'day',
+                            onSelected: (_) => setState(() => _selectedPeriod = 'day'),
+                          ),
+                          ChoiceChip(
+                            label: const Text('Semana'),
+                            selected: _selectedPeriod == 'week',
+                            onSelected: (_) => setState(() => _selectedPeriod = 'week'),
+                          ),
+                          ChoiceChip(
+                            label: const Text('Mês'),
+                            selected: _selectedPeriod == 'month',
+                            onSelected: (_) => setState(() => _selectedPeriod = 'month'),
+                          ),
                         ],
                       ),
-                    ),
-                  ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(12),
+                      const SizedBox(height: 12),
+                      const SizedBox(height: 12),
+                      if (_categories.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            clipBehavior: Clip.none,
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 8.0),
+                                  child: ChoiceChip(
+                                    label: const Text('Todas', overflow: TextOverflow.visible),
+                                    selected: _filterCategoryName == null,
+                                    showCheckmark: false,
+                                    selectedColor: Theme.of(context).colorScheme.primary,
+                                    labelStyle: TextStyle(
+                                      color: _filterCategoryName == null ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                      fontWeight: _filterCategoryName == null ? FontWeight.bold : FontWeight.normal,
+                                    ),
+                                    onSelected: (_) => setState(() => _filterCategoryName = null),
+                                  ),
+                                ),
+                                ..._categories.map((category) {
+                                  final isSelected = _filterCategoryName == category.name;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: ChoiceChip(
+                                      label: Text(category.name, overflow: TextOverflow.visible), 
+                                      labelPadding: const EdgeInsets.only(left: 4, right: 8),
+                                      selected: isSelected,
+                                      showCheckmark: false,
+                                      avatar: CircleAvatar(
+                                        backgroundColor: isSelected 
+                                            ? Colors.white.withOpacity(0.2) 
+                                            : Color(int.parse(category.colorHex, radix: 16)),
+                                        child: Icon(
+                                          iconFromCategoryName(category.iconName), 
+                                          size: 16, 
+                                          color: Colors.white
+                                        ),
+                                      ),
+                                      selectedColor: Color(int.parse(category.colorHex, radix: 16)),
+                                      labelStyle: TextStyle(
+                                        color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                      ),
+                                      onSelected: (_) {
+                                        setState(() {
+                                          _filterCategoryName = isSelected ? null : category.name;
+                                        });
+                                      },
+                                    ),
+                                  );
+                                }),
+                              ],
+                            ),
+                          ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Gasto no mês', style: TextStyle(color: Colors.red)),
-                            Text(formatCurrency(monthlyExpense), style: const TextStyle(fontWeight: FontWeight.bold)),
-                          ],
-                        ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Gasto no mês', style: TextStyle(color: Colors.red)),
+                                  Text(formatCurrency(monthlyExpense), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Recebido no mês', style: TextStyle(color: Colors.green)),
+                                  Text(formatCurrency(monthlyIncome), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Recebido no mês', style: TextStyle(color: Colors.green)),
-                            Text(formatCurrency(monthlyIncome), style: const TextStyle(fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                    ],
+                  )
                 ),
-              ],
-            ),
-          ),
+
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -704,7 +784,7 @@ class _HomePageState extends State<HomePage> {
                       Expanded(
                         child: TextField(
                           controller: _textController,
-                          autofocus: false,
+                          autofocus: true,
                           onSubmitted: (_) => _processInput(),
                           decoration: InputDecoration(
                             hintText: _isIncomeMode ? 'Ex: 5000 salario' : 'Ex: 15,50 padaria...',
@@ -737,6 +817,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ],
+        ),
       ),
     );
   }
