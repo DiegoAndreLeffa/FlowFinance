@@ -21,7 +21,6 @@ O projeto já possui uma base funcional do MVP com:
 
 - [ ] Adicionar um botao de seleção no modal de recorrencias (entrada e saida de valores)
 - [ ] Ajustar a cores na pagina de resumo da parte das barras de metas
-- [ ] Ajustar a tela principal pois quando no celular ele fica abrindo o teclado sempre, pois o campo de digitação esta sempre selecionado.
 - [ ] Melhorar a notificação pois esta muito ruim
 - [ ] Ampliar a palavras que o sistema reconhece para as categorias (ex: taxi, onibus uber -> todos entrão em tranporte)
 - [ ] Ampliar a lista de categorias pre cadastradas

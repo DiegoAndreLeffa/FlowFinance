@@ -372,10 +372,9 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
             child: Column(
               children: [
                 const Text('Saldo Atual', style: TextStyle(fontSize: 16, color: Colors.grey)),
@@ -685,7 +684,7 @@ class _HomePageState extends State<HomePage> {
                       Expanded(
                         child: TextField(
                           controller: _textController,
-                          autofocus: true,
+                          autofocus: false,
                           onSubmitted: (_) => _processInput(),
                           decoration: InputDecoration(
                             hintText: _isIncomeMode ? 'Ex: 5000 salario' : 'Ex: 15,50 padaria...',
