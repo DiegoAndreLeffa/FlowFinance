@@ -366,9 +366,22 @@ class _InsightsPageState extends State<InsightsPage> {
         final progress = (spentInCat / limit).clamp(0.0, 1.0);
         final isOverLimit = spentInCat > limit;
 
-        Color progressColor = Colors.green;
-        if (progress >= 0.7 && progress < 1.0) progressColor = Colors.amber.shade700;
-        if (isOverLimit) progressColor = Colors.red;
+        Color progressColor;
+        Color backgroundColor;
+        
+        if (progress <= 0.70) {
+          // Seguro (Até 70%)
+          progressColor = const Color(0xFF4CAF50);
+          backgroundColor = const Color(0xFFE8F5E9);
+        } else if (progress <= 0.90) {
+          // Atenção (71% a 90%)
+          progressColor = const Color(0xFFFF9800);
+          backgroundColor = const Color(0xFFFFF3E0);
+        } else {
+          // Estourando ou Estourado (Acima de 90%)
+          progressColor = const Color(0xFFE53935);
+          backgroundColor = const Color(0xFFFFEBEE);
+        }
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12.0),
@@ -401,7 +414,7 @@ class _InsightsPageState extends State<InsightsPage> {
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 8,
-                  backgroundColor: Colors.grey.shade200,
+                  backgroundColor: backgroundColor,
                   color: progressColor,
                 ),
               ),
