@@ -134,6 +134,7 @@ class DatabaseService {
       }
 
       final newTransaction = TransactionModel(
+        id: DateTime.now().millisecondsSinceEpoch + recurring.id,
         amountInCents: recurring.amountInCents,
         description: recurring.description,
         date: recurring.nextDueDate,

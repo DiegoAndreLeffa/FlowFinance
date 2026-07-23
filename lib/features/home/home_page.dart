@@ -84,6 +84,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     final newTx = TransactionModel(
+      id: DateTime.now().millisecondsSinceEpoch,
       amountInCents: result.amountInCents,
       description: result.description,
       date: result.date,
