@@ -6,27 +6,36 @@ import '../../data/database/category_database_service.dart';
 import '../../data/models/category_model.dart';
 
 const List<IconData> _availableIcons = [
-  Icons.category_outlined,
-  Icons.restaurant_outlined,
-  Icons.directions_car_outlined,
-  Icons.shopping_bag_outlined,
-  Icons.home_outlined,
-  Icons.healing_outlined,
-  Icons.school_outlined,
-  Icons.sports_esports_outlined,
-  Icons.flight_outlined,
-  Icons.movie_outlined,
+  // Comida / Bebida
+  Icons.restaurant, Icons.fastfood, Icons.local_pizza, Icons.local_cafe, Icons.local_bar, Icons.liquor, Icons.bakery_dining,
+  // Transporte
+  Icons.directions_car, Icons.local_taxi, Icons.directions_bus, Icons.directions_transit, Icons.two_wheeler, Icons.local_gas_station, Icons.flight,
+  // Moradia / Contas
+  Icons.home, Icons.apartment, Icons.bolt, Icons.water_drop, Icons.wifi, Icons.phone_android, Icons.receipt_long,
+  // Compras
+  Icons.shopping_cart, Icons.shopping_bag, Icons.storefront, Icons.checkroom, Icons.credit_card,
+  // Lazer / Entretenimento
+  Icons.movie, Icons.theaters, Icons.sports_esports, Icons.sports_soccer, Icons.fitness_center, Icons.palette, Icons.celebration, Icons.music_note,
+  // Saúde / Pets
+  Icons.medical_services, Icons.healing, Icons.local_pharmacy, Icons.favorite, Icons.pets,
+  // Finanças / Trabalho
+  Icons.attach_money, Icons.savings, Icons.trending_up, Icons.work, Icons.business_center, Icons.account_balance,
+  // Outros / Educação
+  Icons.school, Icons.menu_book, Icons.child_care, Icons.card_giftcard, Icons.category,
 ];
 
 const List<Color> _availableColors = [
-  Color(0xFFEF5350),
-  Color(0xFF42A5F5),
-  Color(0xFFFFCA28),
-  Color(0xFF66BB6A),
-  Color(0xFFAB47BC),
-  Color(0xFF26A69A),
-  Color(0xFFFF7043),
-  Color(0xFF5C6BC0),
+  // Tons Quentes (Vermelhos, Laranjas, Amarelos)
+  Color(0xFFE53935), Color(0xFFEF5350), Color(0xFFF44336), 
+  Color(0xFFE65100), Color(0xFFFF9800), Color(0xFFFFC107), Color(0xFFFFD54F),
+  // Tons Frios (Verdes, Azuis, Cianos)
+  Color(0xFF1B5E20), Color(0xFF4CAF50), Color(0xFF81C784),
+  Color(0xFF0D47A1), Color(0xFF1976D2), Color(0xFF2196F3), Color(0xFF4FC3F7),
+  Color(0xFF006064), Color(0xFF00BCD4), Color(0xFF26A69A),
+  // Tons Neutros e Luxuosos (Roxos, Rosas, Marrons, Cinzas Escuros)
+  Color(0xFF4A148C), Color(0xFF9C27B0), Color(0xFFBA68C8),
+  Color(0xFF880E4F), Color(0xFFE91E63), Color(0xFFF06292),
+  Color(0xFF3E2723), Color(0xFF795548), Color(0xFF263238), Color(0xFF607D8B),
 ];
 
 class CategoriesPage extends StatefulWidget {
@@ -65,7 +74,16 @@ class _CategoriesPageState extends State<CategoriesPage> {
     );
 
     var selectedColor = category != null ? Color(int.parse(category.colorHex, radix: 16)) : _availableColors.first;
-    var selectedIcon = category != null ? _iconFromName(category.iconName) : _availableIcons.first;
+    
+    var selectedIcon = _availableIcons.first;
+    if (category != null) {
+      final codePoint = int.tryParse(category.iconName);
+      if (codePoint != null) {
+        selectedIcon = IconData(codePoint, fontFamily: 'MaterialIcons');
+      } else {
+        selectedIcon = iconFromCategoryName(category.iconName);
+      }
+    }
 
     await showDialog<void>(
       context: context,
@@ -93,38 +111,53 @@ class _CategoriesPageState extends State<CategoriesPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text('Cor'),
+                    const Text('Cor', style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      children: _availableColors.map((color) {
-                        final isSelected = selectedColor.value == color.value;
-                        return GestureDetector(
-                          onTap: () => setDialogState(() => selectedColor = color),
-                          child: CircleAvatar(
-                            radius: 16,
-                            backgroundColor: color,
-                            child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
-                          ),
-                        );
-                      }).toList(),
+                    
+                    SizedBox(
+                      height: 120,
+                      child: SingleChildScrollView(
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _availableColors.map((color) {
+                            final isSelected = selectedColor.value == color.value;
+                            return GestureDetector(
+                              onTap: () => setDialogState(() => selectedColor = color),
+                              child: CircleAvatar(
+                                radius: 16,
+                                backgroundColor: color,
+                                child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
-                    const Text('Ícone'),
+                    
+                    const Text('Ícone', style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      children: _availableIcons.map((icon) {
-                        final isSelected = selectedIcon == icon;
-                        return GestureDetector(
-                          onTap: () => setDialogState(() => selectedIcon = icon),
-                          child: CircleAvatar(
-                            radius: 18,
-                            backgroundColor: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey.shade200,
-                            child: Icon(icon, color: isSelected ? Colors.white : Colors.black54),
-                          ),
-                        );
-                      }).toList(),
+                    
+                    SizedBox(
+                      height: 180,
+                      child: SingleChildScrollView(
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _availableIcons.map((icon) {
+                            final isSelected = selectedIcon == icon;
+                            return GestureDetector(
+                              onTap: () => setDialogState(() => selectedIcon = icon),
+                              child: CircleAvatar(
+                                radius: 16,
+                                backgroundColor: isSelected ? selectedColor : Theme.of(context).colorScheme.surface,
+                                child: Icon(icon, color: isSelected ? Colors.white : Colors.grey.shade600),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -143,7 +176,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                       id: category?.id ?? DateTime.now().millisecondsSinceEpoch,
                       name: name,
                       colorHex: selectedColor.value.toRadixString(16).toUpperCase(),
-                      iconName: iconNameFromIcon(selectedIcon),
+                      iconName: selectedIcon.codePoint.toString(),
                       limitAmountInCents: limitCents,
                     );
 
@@ -169,6 +202,13 @@ class _CategoriesPageState extends State<CategoriesPage> {
   }
 
   IconData _iconFromName(String? iconName) {
+    if (iconName == null) return Icons.category;
+    
+    final codePoint = int.tryParse(iconName);
+    if (codePoint != null) {
+      return IconData(codePoint, fontFamily: 'MaterialIcons');
+    }
+    
     return iconFromCategoryName(iconName);
   }
 
@@ -184,7 +224,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                 final category = _categories[index];
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: Color(int.parse(category.colorHex, radix: 16)).withValues(alpha: 0.15),
+                    backgroundColor: Color(int.parse(category.colorHex, radix: 16)).withOpacity(0.15),
                     child: Icon(_iconFromName(category.iconName), color: Color(int.parse(category.colorHex, radix: 16))),
                   ),
                   title: Text(category.name),
