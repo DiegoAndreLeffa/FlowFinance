@@ -22,7 +22,6 @@ O projeto já possui uma base funcional do MVP com:
 - [ ] Ampliar a palavras que o sistema reconhece para as categorias (ex: taxi, onibus uber -> todos entrão em tranporte)
 - [ ] Ampliar a lista de categorias pre cadastradas
 - [ ] Ampliar a lista de novas categorias que podem ser adicionadas, adicionar mais icones e cores para essas categoria tambem
-- [ ] 
 
 ## Como executar
 

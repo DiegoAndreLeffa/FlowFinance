@@ -51,7 +51,10 @@ class CategoryDatabaseService {
     return [
       CategoryModel(id: 1, name: 'Alimentação', colorHex: 'FFEF5350', iconName: 'restaurant'),
       CategoryModel(id: 2, name: 'Transporte', colorHex: 'FF42A5F5', iconName: 'directions_car'),
-      CategoryModel(id: 3, name: 'Lazer', colorHex: 'FFFFCA28', iconName: 'celebration'),
+      CategoryModel(id: 3, name: 'Lazer', colorHex: 'FFFFCA28', iconName: 'movie'),
+      CategoryModel(id: 4, name: 'Saúde', colorHex: 'FF66BB6A', iconName: 'healing'),
+      CategoryModel(id: 5, name: 'Educação', colorHex: 'FFAB47BC', iconName: 'school'),
+      CategoryModel(id: 6, name: 'Contas', colorHex: 'FF26A69A', iconName: 'home'),
     ];
   }
 }
