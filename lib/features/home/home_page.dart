@@ -141,6 +141,16 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _showInitialBalanceDialog() async {
     final controller = TextEditingController(text: (_initialBalance / 100).toStringAsFixed(2));
+    final focusNode = FocusNode();
+
+    focusNode.addListener(() {
+      if (focusNode.hasFocus) {
+        controller.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: controller.text.length,
+        );
+      }
+    });
 
     await showDialog<void>(
       context: context,
@@ -149,7 +159,9 @@ class _HomePageState extends State<HomePage> {
           title: const Text('Saldo inicial'),
           content: TextField(
             controller: controller,
-            keyboardType: TextInputType.number,
+            focusNode: focusNode,
+            autofocus: true,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(labelText: 'Valor inicial'),
           ),
           actions: [
@@ -168,7 +180,9 @@ class _HomePageState extends State<HomePage> {
           ],
         );
       },
-    );
+    ).then((_) {
+      focusNode.dispose(); 
+    });
   }
 
   Future<void> _showRecurringDialog() async {

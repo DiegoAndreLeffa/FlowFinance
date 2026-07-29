@@ -19,11 +19,6 @@ O projeto já possui uma base funcional do MVP com:
 
 ### Melhorias de UX/UI (Experiência e Interface)
 
-**2. [Melhoria/UX] Limpeza automática do campo no Modal de Saldo Inicial**
-*   **O que fazer:** Melhorar a fluidez ao digitar o saldo inicial.
-*   **Detalhes:** Quando o usuário abrir o modal de saldo inicial e clicar no campo de digitação, o valor padrão (ex: `0,00`) deve sumir automaticamente para ele começar a digitar. 
-*   *Dica de UX:* Em vez de apenas apagar, o sistema pode usar a função "Selecionar tudo ao focar" (ex: `selectTextOnFocus`), assim, ao digitar o primeiro número, o valor antigo é substituído.
-
 **3. [Melhoria/UI] Ajuste da paleta de cores do Modo Escuro (Dark Mode)**
 *   **O que fazer:** Trocar a cor de fundo (background) do modo escuro.
 *   **Detalhes:** Atualmente, o modo escuro pode estar cansativo ou com contraste ruim. Criar uma *branch/versão* de teste alterando o fundo de preto puro (ou a cor atual) para um **cinza escuro** (exemplo: `#121212` ou `#1E1E1E`, que é o padrão de conforto visual do Material Design).
