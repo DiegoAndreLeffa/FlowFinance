@@ -24,6 +24,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController _textController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   final SmartInputService _smartInputService = SmartInputService();
   final DatabaseService _databaseService = DatabaseService();
   final CategoryDatabaseService _categoryService = CategoryDatabaseService();
@@ -134,6 +135,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _textController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -468,7 +470,9 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
+        onTap: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
         behavior: HitTestBehavior.opaque,
             child: Column(
               children: [
@@ -784,8 +788,12 @@ class _HomePageState extends State<HomePage> {
                       Expanded(
                         child: TextField(
                           controller: _textController,
-                          autofocus: true,
-                          onSubmitted: (_) => _processInput(),
+                          focusNode: _focusNode,
+                          autofocus: false,
+                          onSubmitted: (_) {
+                            _processInput();
+                            _focusNode.requestFocus();
+                          },
                           decoration: InputDecoration(
                             hintText: _isIncomeMode ? 'Ex: 5000 salario' : 'Ex: 15,50 padaria...',
                             hintStyle: TextStyle(color: _isIncomeMode ? Colors.green.shade300 : Colors.grey),
