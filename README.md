@@ -19,10 +19,6 @@ O projeto já possui uma base funcional do MVP com:
 
 ### Melhorias de UX/UI (Experiência e Interface)
 
-**3. [Melhoria/UI] Ajuste da paleta de cores do Modo Escuro (Dark Mode)**
-*   **O que fazer:** Trocar a cor de fundo (background) do modo escuro.
-*   **Detalhes:** Atualmente, o modo escuro pode estar cansativo ou com contraste ruim. Criar uma *branch/versão* de teste alterando o fundo de preto puro (ou a cor atual) para um **cinza escuro** (exemplo: `#121212` ou `#1E1E1E`, que é o padrão de conforto visual do Material Design).
-
 **4. [Melhoria/Design] Refinamento das Notificações**
 *   **O que fazer:** Retomar e detalhar o ticket anterior de notificações. 
 *   **Detalhes:**
