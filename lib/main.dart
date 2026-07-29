@@ -42,10 +42,37 @@ class FlowFinanceApp extends StatelessWidget {
             appBarTheme: const AppBarTheme(centerTitle: true, scrolledUnderElevation: 0, backgroundColor: Colors.transparent, elevation: 0),
           ),
           darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4CAF50), brightness: Brightness.dark, surface: const Color(0xFF121212)),
-            textTheme: textTheme.apply(bodyColor: Colors.white, displayColor: Colors.white),
+            scaffoldBackgroundColor: const Color(0xFF121212), 
+            
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF4CAF50),
+              brightness: Brightness.dark,
+              surface: const Color(0xFF1E1E1E), 
+              onSurface: Colors.white.withOpacity(0.87),
+            ),
+            
+            textTheme: textTheme.apply(
+              bodyColor: Colors.white.withOpacity(0.87), 
+              displayColor: Colors.white,
+            ),
+            
             useMaterial3: true,
-            appBarTheme: const AppBarTheme(centerTitle: true, scrolledUnderElevation: 0, backgroundColor: Colors.transparent, elevation: 0),
+            
+            appBarTheme: const AppBarTheme(
+              centerTitle: true,
+              scrolledUnderElevation: 0,
+              backgroundColor: Color(0xFF121212), 
+              elevation: 0,
+            ),
+            
+            dialogTheme: DialogThemeData(
+              backgroundColor: const Color(0xFF1E1E1E),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            
+            drawerTheme: const DrawerThemeData(
+              backgroundColor: Color(0xFF1A1A1A),
+            ),
           ),
           routerConfig: appRouter,
           
