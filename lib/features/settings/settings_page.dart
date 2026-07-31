@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 
 import '../../data/database/database_service.dart';
 import '../../core/security/auth_service.dart';
+import '../../core/notifications/notification_service.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -162,6 +163,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
             const Text('Segurança e Privacidade', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             const Text('Proteja seus dados com biometria.', style: TextStyle(color: Colors.grey)),
@@ -187,6 +189,27 @@ class _SettingsPageState extends State<SettingsPage> {
                       await AuthService().setProtectionEnabled(false);
                       setState(() {});
                     }
+                  },
+                );
+              }
+            ),
+            const SizedBox(height: 16),
+            const Text('Lembretes e Avisos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Receba um alerta diário para não esquecer de anotar seus gastos.', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 12),
+            FutureBuilder<bool>(
+              future: NotificationService().isNotificationsEnabled(),
+              builder: (context, snapshot) {
+                final isEnabled = snapshot.data ?? false;
+                return SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  secondary: const Icon(Icons.notifications_active_outlined, color: Colors.amber),
+                  title: const Text('Lembrete Diário'),
+                  value: isEnabled,
+                  onChanged: (value) async {
+                    await NotificationService().toggleNotifications(value);
+                    setState(() {});
                   },
                 );
               }
