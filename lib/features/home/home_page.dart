@@ -14,6 +14,7 @@ import '../categories/categories_page.dart';
 import '../settings/settings_page.dart';
 import 'home_providers.dart';
 import '../../main.dart';
+import '../../shared/widgets/main_drawer.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -455,75 +456,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: Column(
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.account_balance_wallet, size: 48, color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(height: 8),
-                    const Text('FlowFinance', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.pie_chart_outline),
-              title: const Text('Resumo & Insights'),
-              onTap: () async {
-                Navigator.pop(context);
-                await context.push('/insights');
-                _loadTransactions();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.category_outlined),
-              title: const Text('Categorias'),
-              onTap: () async {
-                Navigator.pop(context);
-                await context.push('/categories');
-                _loadTransactions();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings_outlined),
-              title: const Text('Configurações'),
-              onTap: () async {
-                Navigator.pop(context);
-                await context.push('/settings');
-                _loadTransactions();
-              },
-            ),
-            
-            const Spacer(),
-            const Divider(),
-            
-            ValueListenableBuilder<ThemeMode>(
-              valueListenable: themeNotifier, 
-              builder: (context, currentMode, child) {
-                final isDark = currentMode == ThemeMode.dark || 
-                    (currentMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
-                
-                return SwitchListTile(
-                  secondary: Icon(isDark ? Icons.dark_mode : Icons.light_mode, color: isDark ? Colors.amber : Colors.orange),
-                  title: const Text('Modo Escuro'),
-                  value: isDark,
-                  onChanged: (value) {
-                    themeNotifier.value = value ? ThemeMode.dark : ThemeMode.light;
-                  },
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
+      drawer: const MainDrawer(),
       body: GestureDetector(
         onTap: () {
           FocusManager.instance.primaryFocus?.unfocus();

@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import '../../data/database/database_service.dart';
 import '../../core/security/auth_service.dart';
 import '../../core/notifications/notification_service.dart';
+import '../../shared/widgets/main_drawer.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -135,6 +136,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Configurações')),
+      drawer: const MainDrawer(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
