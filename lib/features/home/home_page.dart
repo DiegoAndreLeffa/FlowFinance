@@ -68,7 +68,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _processInput() async {
     final text = _textController.text;
     final result = _smartInputService.parse(
-      text, 
+      text,
       selectedCategory: _selectedCategoryName,
       isIncomeMode: _isIncomeMode,
     );
@@ -109,27 +109,68 @@ class _HomePageState extends State<HomePage> {
     _textController.clear();
     _selectedCategoryName = null;
     if (!mounted) return;
-    
+
     setState(() {
-      _isIncomeMode = false; 
+      _isIncomeMode = false;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(_isIncomeMode ? 'Receita adicionada!' : 'Despesa registrada!'),
-          ],
+    bool showedAlert = false;
+
+    if (result.type == 'expense' && result.categoryName != null) {
+      CategoryModel? category;
+      try {
+        category = _categories.firstWhere((c) => c.name == result.categoryName);
+      } catch (_) {}
+
+      if (category != null && category.limitAmountInCents > 0) {
+        final now = DateTime.now();
+        
+        final spentThisMonth = _transactions
+            .where((t) => t.type == 'expense' && t.categoryName == category!.name && t.date.month == now.month && t.date.year == now.year)
+            .fold<int>(0, (sum, t) => sum + t.amountInCents.abs());
+
+        if (spentThisMonth > category.limitAmountInCents) {
+          showedAlert = true;
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              icon: const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 48),
+              title: const Text('Orçamento Estourado!'),
+              content: Text(
+                'Com essa última despesa, você ultrapassou a sua meta mensal para a categoria "${category!.name}".\n\n'
+                'Gasto atual: ${formatCurrency(spentThisMonth)}\n'
+                'Seu Limite: ${formatCurrency(category.limitAmountInCents)}',
+              ),
+              actions: [
+                FilledButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Entendi'),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    }
+
+    if (!showedAlert) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_outline, color: Colors.white),
+              const SizedBox(width: 8),
+              Text(result.type == 'income' ? 'Receita adicionada!' : 'Despesa registrada!'),
+            ],
+          ),
+          backgroundColor: Colors.green.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
+          duration: const Duration(seconds: 2),
         ),
-        backgroundColor: Colors.green.shade600,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+      );
+    }
   }
 
   @override
