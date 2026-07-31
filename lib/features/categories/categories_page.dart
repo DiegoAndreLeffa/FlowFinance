@@ -4,6 +4,7 @@ import '../../core/utils/category_icon_mapper.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/database/category_database_service.dart';
 import '../../data/models/category_model.dart';
+import '../../shared/widgets/main_drawer.dart';
 
 const List<IconData> _availableIcons = [
   // Comida / Bebida
@@ -216,6 +217,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Categorias')),
+      drawer: const MainDrawer(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(

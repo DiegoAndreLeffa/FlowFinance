@@ -19,11 +19,6 @@ O projeto já possui uma base funcional do MVP com:
 
 ### Melhorias de UX/UI (Experiência e Interface)
 
-**4. [Melhoria/Design] Refinamento das Notificações**
-*   **O que fazer:** Retomar e detalhar o ticket anterior de notificações. 
-*   **Detalhes:**
-    *   É notificação *Push* (que chega com o app fechado) ou *In-app* (alertas dentro do app)
-
 ### Novas Funcionalidades (Features)
 
 **5. [Feature/Regra de Negócio] Cores dinâmicas e/ou customizáveis para o Progresso das Metas**

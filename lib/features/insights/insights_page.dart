@@ -7,6 +7,7 @@ import '../../data/database/category_database_service.dart';
 import '../../data/database/database_service.dart';
 import '../../data/models/category_model.dart';
 import '../../data/models/transaction_model.dart';
+import '../../shared/widgets/main_drawer.dart';
 
 class InsightsPage extends StatefulWidget {
   const InsightsPage({super.key});
@@ -181,6 +182,7 @@ class _InsightsPageState extends State<InsightsPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Resumo & Insights')),
+      drawer: const MainDrawer(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
