@@ -438,6 +438,7 @@ class _HomePageState extends State<HomePage> {
     final monthlyExpense = periodTransactions.where((tx) => tx.type == 'expense').fold<int>(0, (sum, tx) => sum + tx.amountInCents.abs());
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Finari', style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1.0)),
         centerTitle: true,
@@ -462,252 +463,50 @@ class _HomePageState extends State<HomePage> {
           FocusManager.instance.primaryFocus?.unfocus();
         },
         behavior: HitTestBehavior.opaque,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column (
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  const Text('Saldo Atual', style: TextStyle(fontSize: 16, color: Colors.grey)),
+                  const SizedBox(height: 8),
+                  Text(
+                    _isBalanceVisible ? formatCurrency(currentBalance) : 'R\$ •••••',
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: currentBalance < 0 ? Colors.red : Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
-                      const Text('Saldo Atual', style: TextStyle(fontSize: 16, color: Colors.grey)),
-                      const SizedBox(height: 8),
-                      Text(
-                        _isBalanceVisible ? formatCurrency(currentBalance) : 'R\$ •••••',
-                        style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          color: currentBalance < 0 ? Colors.red : Theme.of(context).colorScheme.onSurface,
-                        ),
+                      ChoiceChip(
+                        label: const Text('Todos'),
+                        selected: _selectedPeriod == 'all',
+                        onSelected: (_) => setState(() => _selectedPeriod = 'all'),
                       ),
-                      const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          ChoiceChip(
-                            label: const Text('Todos'),
-                            selected: _selectedPeriod == 'all',
-                            onSelected: (_) => setState(() => _selectedPeriod = 'all'),
-                          ),
-                          ChoiceChip(
-                            label: const Text('Hoje'),
-                            selected: _selectedPeriod == 'day',
-                            onSelected: (_) => setState(() => _selectedPeriod = 'day'),
-                          ),
-                          ChoiceChip(
-                            label: const Text('Semana'),
-                            selected: _selectedPeriod == 'week',
-                            onSelected: (_) => setState(() => _selectedPeriod = 'week'),
-                          ),
-                          ChoiceChip(
-                            label: const Text('Mês'),
-                            selected: _selectedPeriod == 'month',
-                            onSelected: (_) => setState(() => _selectedPeriod = 'month'),
-                          ),
-                        ],
+                      ChoiceChip(
+                        label: const Text('Hoje'),
+                        selected: _selectedPeriod == 'day',
+                        onSelected: (_) => setState(() => _selectedPeriod = 'day'),
                       ),
-                      const SizedBox(height: 12),
-                      const SizedBox(height: 12),
-                      if (_categories.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-                            clipBehavior: Clip.none,
-                            child: Row(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 8.0),
-                                  child: ChoiceChip(
-                                    label: const Text('Todas', overflow: TextOverflow.visible),
-                                    selected: _filterCategoryName == null,
-                                    showCheckmark: false,
-                                    selectedColor: Theme.of(context).colorScheme.primary,
-                                    labelStyle: TextStyle(
-                                      color: _filterCategoryName == null ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                                      fontWeight: _filterCategoryName == null ? FontWeight.bold : FontWeight.normal,
-                                    ),
-                                    onSelected: (_) => setState(() => _filterCategoryName = null),
-                                  ),
-                                ),
-                                ..._categories.map((category) {
-                                  final isSelected = _filterCategoryName == category.name;
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: ChoiceChip(
-                                      label: Text(category.name, overflow: TextOverflow.visible), 
-                                      labelPadding: const EdgeInsets.only(left: 4, right: 8),
-                                      selected: isSelected,
-                                      showCheckmark: false,
-                                      avatar: CircleAvatar(
-                                        backgroundColor: isSelected 
-                                            ? Colors.white.withOpacity(0.2) 
-                                            : Color(int.parse(category.colorHex, radix: 16)),
-                                        child: Icon(
-                                          iconFromCategoryName(category.iconName), 
-                                          size: 16, 
-                                          color: Colors.white
-                                        ),
-                                      ),
-                                      selectedColor: Color(int.parse(category.colorHex, radix: 16)),
-                                      labelStyle: TextStyle(
-                                        color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                      ),
-                                      onSelected: (_) {
-                                        setState(() {
-                                          _filterCategoryName = isSelected ? null : category.name;
-                                        });
-                                      },
-                                    ),
-                                  );
-                                }),
-                              ],
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('Gasto no mês', style: TextStyle(color: Colors.red)),
-                                  Text(formatCurrency(monthlyExpense), style: const TextStyle(fontWeight: FontWeight.bold)),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('Recebido no mês', style: TextStyle(color: Colors.green)),
-                                  Text(formatCurrency(monthlyIncome), style: const TextStyle(fontWeight: FontWeight.bold)),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                      ChoiceChip(
+                        label: const Text('Semana'),
+                        selected: _selectedPeriod == 'week',
+                        onSelected: (_) => setState(() => _selectedPeriod = 'week'),
+                      ),
+                      ChoiceChip(
+                        label: const Text('Mês'),
+                        selected: _selectedPeriod == 'month',
+                        onSelected: (_) => setState(() => _selectedPeriod = 'month'),
                       ),
                     ],
-                  )
-                ),
-
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : filteredTransactions.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey.shade300),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Nenhuma transação encontrada',
-                              style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Seus registros aparecerão aqui.',
-                              style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: filteredTransactions.length,
-                        itemBuilder: (context, index) {
-                          final tx = filteredTransactions[index];
-                          final category = _categories.firstWhere(
-                            (item) => item.name == tx.categoryName,
-                            orElse: () => CategoryModel(name: 'Sem categoria', colorHex: 'FF9E9E9E', iconName: 'category'),
-                          );
-
-                          return Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Dismissible(
-                                key: ValueKey(tx.id == 0 ? '${tx.description}-${tx.date.toIso8601String()}' : tx.id),
-                                direction: DismissDirection.endToStart,
-                                background: Container(
-                                  color: Colors.red.shade400,
-                                  alignment: Alignment.centerRight,
-                                  padding: const EdgeInsets.only(right: 24),
-                                  child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
-                                ),
-                                onDismissed: (_) async {
-                                  await _databaseService.deleteTransaction(tx.id);
-                                  await _loadTransactions();
-                                },
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  onTap: () => _showEditDialog(tx),
-                                  leading: CircleAvatar(
-                                    radius: 24,
-                                    backgroundColor: Color(int.parse(category.colorHex, radix: 16)).withOpacity(0.15),
-                                    child: Icon(iconFromCategoryName(category.iconName), color: Color(int.parse(category.colorHex, radix: 16))),
-                                  ),
-                                  title: Text(tx.description, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                  subtitle: Text('${tx.date.day.toString().padLeft(2, '0')}/${tx.date.month.toString().padLeft(2, '0')} • ${tx.categoryName ?? 'Outros'}'),
-                                  trailing: Text(
-                                    _isBalanceVisible ? formatCurrency(tx.amountInCents) : 'R\$ •••••',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold, 
-                                      fontSize: 16,
-                                      color: tx.type == 'income' ? Colors.green : Theme.of(context).colorScheme.onSurface,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+                  ),
+                  const SizedBox(height: 12),
                   if (_categories.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12.0),
@@ -716,103 +515,306 @@ class _HomePageState extends State<HomePage> {
                         physics: const BouncingScrollPhysics(),
                         clipBehavior: Clip.none,
                         child: Row(
-                          children: _categories.map((category) {
-                            final isSelected = _selectedCategoryName == category.name;
-                            return Padding(
+                          children: [
+                            Padding(
                               padding: const EdgeInsets.only(right: 8.0),
                               child: ChoiceChip(
-                                label: Text(category.name, overflow: TextOverflow.visible), 
-                                labelPadding: const EdgeInsets.only(left: 4, right: 8),
-                                selected: isSelected,
+                                label: const Text('Todas', overflow: TextOverflow.visible),
+                                selected: _filterCategoryName == null,
                                 showCheckmark: false,
-                                avatar: CircleAvatar(
-                                  backgroundColor: isSelected 
-                                      ? Colors.white.withOpacity(0.2) 
-                                      : Color(int.parse(category.colorHex, radix: 16)),
-                                  child: Icon(
-                                    iconFromCategoryName(category.iconName), 
-                                    size: 16, 
-                                    color: Colors.white
-                                  ),
-                                ),
-                                selectedColor: Color(int.parse(category.colorHex, radix: 16)),
+                                selectedColor: Theme.of(context).colorScheme.primary,
                                 labelStyle: TextStyle(
-                                  color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  color: _filterCategoryName == null ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                  fontWeight: _filterCategoryName == null ? FontWeight.bold : FontWeight.normal,
                                 ),
-                                onSelected: (_) {
-                                  setState(() {
-                                    _selectedCategoryName = isSelected ? null : category.name;
-                                  });
-                                },
+                                onSelected: (_) => setState(() => _filterCategoryName = null),
                               ),
-                            );
-                          }).toList(),
+                            ),
+                            ..._categories.map((category) {
+                              final isSelected = _filterCategoryName == category.name;
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: ChoiceChip(
+                                  label: Text(category.name, overflow: TextOverflow.visible),
+                                  labelPadding: const EdgeInsets.only(left: 4, right: 8),
+                                  selected: isSelected,
+                                  showCheckmark: false,
+                                  avatar: CircleAvatar(
+                                    backgroundColor: isSelected
+                                        ? Colors.white.withOpacity(0.2)
+                                        : Color(int.parse(category.colorHex, radix: 16)),
+                                    child: Icon(
+                                      iconFromCategoryName(category.iconName),
+                                      size: 16,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  selectedColor: Color(int.parse(category.colorHex, radix: 16)),
+                                  labelStyle: TextStyle(
+                                    color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                  onSelected: (_) {
+                                    setState(() {
+                                      _filterCategoryName = isSelected ? null : category.name;
+                                    });
+                                  },
+                                ),
+                              );
+                            }),
+                          ],
                         ),
                       ),
                     ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   Row(
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: _isIncomeMode ? Colors.green.withValues(alpha: 0.15) : Colors.red.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            _isIncomeMode ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
-                            color: _isIncomeMode ? Colors.green : Colors.red,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _isIncomeMode = !_isIncomeMode;
-                            });
-                          },
-                          tooltip: _isIncomeMode ? 'Receita' : 'Despesa',
-                        ),
-                      ),
-                      const SizedBox(width: 8),
                       Expanded(
-                        child: TextField(
-                          controller: _textController,
-                          focusNode: _focusNode,
-                          autofocus: false,
-                          onSubmitted: (_) {
-                            _processInput();
-                            _focusNode.requestFocus();
-                          },
-                          decoration: InputDecoration(
-                            hintText: _isIncomeMode ? 'Ex: 5000 salario' : 'Ex: 15,50 padaria...',
-                            hintStyle: TextStyle(color: _isIncomeMode ? Colors.green.shade300 : Colors.grey),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                color: _isIncomeMode ? Colors.green : Theme.of(context).colorScheme.primary,
-                                width: 2,
-                              ),
-                            ),
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.send),
-                              color: _isIncomeMode ? Colors.green : Theme.of(context).colorScheme.primary,
-                              onPressed: _processInput,
-                            ),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Gasto no mês', style: TextStyle(color: Colors.red)),
+                              Text(formatCurrency(monthlyExpense), style: const TextStyle(fontWeight: FontWeight.bold)),
+                            ],
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      IconButton.filled(
-                        onPressed: _showRecurringDialog,
-                        icon: const Icon(Icons.repeat),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Recebido no mês', style: TextStyle(color: Colors.green)),
+                              Text(formatCurrency(monthlyIncome), style: const TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : filteredTransactions.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey.shade300),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Nenhuma transação encontrada',
+                                style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Seus registros aparecerão aqui.',
+                                style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: filteredTransactions.length,
+                          itemBuilder: (context, index) {
+                            final tx = filteredTransactions[index];
+                            final category = _categories.firstWhere(
+                              (item) => item.name == tx.categoryName,
+                              orElse: () => CategoryModel(name: 'Sem categoria', colorHex: 'FF9E9E9E', iconName: 'category'),
+                            );
+
+                            return Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.03),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Dismissible(
+                                  key: ValueKey(tx.id == 0 ? '${tx.description}-${tx.date.toIso8601String()}' : tx.id),
+                                  direction: DismissDirection.endToStart,
+                                  background: Container(
+                                    color: Colors.red.shade400,
+                                    alignment: Alignment.centerRight,
+                                    padding: const EdgeInsets.only(right: 24),
+                                    child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
+                                  ),
+                                  onDismissed: (_) async {
+                                    await _databaseService.deleteTransaction(tx.id);
+                                    await _loadTransactions();
+                                  },
+                                  child: ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    onTap: () => _showEditDialog(tx),
+                                    leading: CircleAvatar(
+                                      radius: 24,
+                                      backgroundColor: Color(int.parse(category.colorHex, radix: 16)).withOpacity(0.15),
+                                      child: Icon(iconFromCategoryName(category.iconName), color: Color(int.parse(category.colorHex, radix: 16))),
+                                    ),
+                                    title: Text(tx.description, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    subtitle: Text('${tx.date.day.toString().padLeft(2, '0')}/${tx.date.month.toString().padLeft(2, '0')} • ${tx.categoryName ?? 'Outros'}'),
+                                    trailing: Text(
+                                      _isBalanceVisible ? formatCurrency(tx.amountInCents) : 'R\$ •••••',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: tx.type == 'income' ? Colors.green : Theme.of(context).colorScheme.onSurface,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        // Padding extra pra não colar no teclado ou no fundo do celular
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
           ),
-        ],
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_categories.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      clipBehavior: Clip.none,
+                      child: Row(
+                        children: _categories.map((category) {
+                          final isSelected = _selectedCategoryName == category.name;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: ChoiceChip(
+                              label: Text(category.name, overflow: TextOverflow.visible),
+                              labelPadding: const EdgeInsets.only(left: 4, right: 8),
+                              selected: isSelected,
+                              showCheckmark: false,
+                              avatar: CircleAvatar(
+                                backgroundColor: isSelected
+                                    ? Colors.white.withOpacity(0.2)
+                                    : Color(int.parse(category.colorHex, radix: 16)),
+                                child: Icon(
+                                  iconFromCategoryName(category.iconName),
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              selectedColor: Color(int.parse(category.colorHex, radix: 16)),
+                              labelStyle: TextStyle(
+                                color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
+                              onSelected: (_) {
+                                setState(() {
+                                  _selectedCategoryName = isSelected ? null : category.name;
+                                });
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: _isIncomeMode ? Colors.green.withOpacity(0.15) : Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          _isIncomeMode ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                          color: _isIncomeMode ? Colors.green : Colors.red,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isIncomeMode = !_isIncomeMode;
+                          });
+                        },
+                        tooltip: _isIncomeMode ? 'Receita' : 'Despesa',
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _textController,
+                        focusNode: _focusNode,
+                        autofocus: false,
+                        onSubmitted: (_) {
+                          _processInput();
+                          _focusNode.requestFocus();
+                        },
+                        decoration: InputDecoration(
+                          hintText: _isIncomeMode ? 'Ex: 5000 salario' : 'Ex: 15,50 padaria...',
+                          hintStyle: TextStyle(color: _isIncomeMode ? Colors.green.shade300 : Colors.grey),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              color: _isIncomeMode ? Colors.green : Theme.of(context).colorScheme.primary,
+                              width: 2,
+                            ),
+                          ),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.send),
+                            color: _isIncomeMode ? Colors.green : Theme.of(context).colorScheme.primary,
+                            onPressed: _processInput,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton.filled(
+                      onPressed: _showRecurringDialog,
+                      icon: const Icon(Icons.repeat),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
