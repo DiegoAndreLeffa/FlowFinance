@@ -15,15 +15,17 @@ class MainDrawer extends StatelessWidget {
         children: [
           DrawerHeader(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
             ),
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.account_balance_wallet, size: 48, color: Theme.of(context).colorScheme.primary),
+                  Icon(Icons.insights_rounded, size: 48, color: Theme.of(context).colorScheme.primary),
                   const SizedBox(height: 8),
-                  const Text('FlowFinance', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text('Finari', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 4),
+                  Text('Entenda. Organize. Evolua.', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.primary)),
                 ],
               ),
             ),
