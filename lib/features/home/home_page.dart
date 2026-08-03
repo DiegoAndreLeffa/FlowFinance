@@ -439,7 +439,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FlowFinance'),
+        title: const Text('Finari', style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1.0)),
         centerTitle: true,
         actions: [
           IconButton(

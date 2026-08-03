@@ -17,6 +17,16 @@ O projeto já possui uma base funcional do MVP com:
 
 ### Bugs & Correções
 
+**[Bug/Dados] Ícones das categorias mudando inesperadamente na Tela Principal**
+*   **Contexto do Problema:** Na Tela Principal, os ícones das categorias estão sendo alterados sozinhos após o usuário interagir com a página de Categorias/Metas.
+*   **Passo a passo para reproduzir o erro:**
+    1. O usuário acessa a página de Categorias.
+    2. O usuário adiciona uma "Meta de Gastos" para uma categoria específica.
+    3. O usuário volta para a Tela Principal.
+    4. *Erro:* O ícone da categoria em questão (ou de outras categorias) foi alterado sem que o usuário solicitasse essa mudança.
+*   **Causa provável (Nota para o desenvolvedor):** A função ou rota de *Update* (PUT/PATCH) que salva a meta de gastos na categoria está, acidentalmente, mutando o objeto da categoria inteira. Pode ser que o campo `icon` esteja sendo sobrescrito por um valor nulo, padrão (default), ou puxando o ID errado na hora de atualizar o estado (Context/Redux) ou o Banco de Dados.
+*   **Ação Esperada:** A adição ou edição de uma meta deve atualizar **exclusivamente** o campo referente ao valor da meta. A identidade visual da categoria (ícone, cor, nome) deve permanecer intacta e sincronizada perfeitamente com a Tela Principal.
+
 ### Melhorias de UX/UI (Experiência e Interface)
 
 ### Novas Funcionalidades (Features)
@@ -35,9 +45,15 @@ O projeto já possui uma base funcional do MVP com:
 
 ## Como executar
 
+Para rodar o projeto em modo de desenvolvimento (Debug):
 ```bash
 flutter pub get
 flutter run
+```
+
+Para gerar o arquivo APK de Produção (Pronto para instalar no Android):
+```bash
+flutter build apk --release --no-tree-shake-icons
 ```
 
 ## Observações
