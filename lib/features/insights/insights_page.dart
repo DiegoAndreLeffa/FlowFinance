@@ -368,21 +368,22 @@ class _InsightsPageState extends State<InsightsPage> {
         final progress = (spentInCat / limit).clamp(0.0, 1.0);
         final isOverLimit = spentInCat > limit;
 
+        // --- CORES SEMÂNTICAS DA NOVA REGRA DE NEGÓCIO ---
         Color progressColor;
         Color backgroundColor;
         
-        if (progress <= 0.70) {
-          // Seguro (Até 70%)
-          progressColor = const Color(0xFF4CAF50);
-          backgroundColor = const Color(0xFFE8F5E9);
-        } else if (progress <= 0.90) {
-          // Atenção (71% a 90%)
-          progressColor = const Color(0xFFFF9800);
-          backgroundColor = const Color(0xFFFFF3E0);
+        if (progress < 0.50) {
+          // Tranquilo (Até 49%)
+          progressColor = const Color(0xFF4CAF50); // Verde
+          backgroundColor = const Color(0xFFE8F5E9); 
+        } else if (progress <= 0.70) {
+          // Atenção (50% a 70%)
+          progressColor = const Color(0xFFFFC107); // Amarelo (Amber)
+          backgroundColor = const Color(0xFFFFF8E1); 
         } else {
-          // Estourando ou Estourado (Acima de 90%)
-          progressColor = const Color(0xFFE53935);
-          backgroundColor = const Color(0xFFFFEBEE);
+          // Perigo (Acima de 70%)
+          progressColor = const Color(0xFFE53935); // Vermelho
+          backgroundColor = const Color(0xFFFFEBEE); 
         }
 
         return Padding(
