@@ -77,10 +77,17 @@ class _CategoriesPageState extends State<CategoriesPage> {
     var selectedColor = category != null ? Color(int.parse(category.colorHex, radix: 16)) : _availableColors.first;
     
     var selectedIcon = _availableIcons.first;
+    
     if (category != null) {
       final codePoint = int.tryParse(category.iconName);
       if (codePoint != null) {
-        selectedIcon = IconData(codePoint, fontFamily: 'MaterialIcons');
+        final iconFromDb = IconData(codePoint, fontFamily: 'MaterialIcons');
+        
+        try {
+          selectedIcon = _availableIcons.firstWhere((icon) => icon.codePoint == iconFromDb.codePoint);
+        } catch (_) {
+          selectedIcon = _availableIcons.first;
+        }
       } else {
         selectedIcon = iconFromCategoryName(category.iconName);
       }
@@ -177,7 +184,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                       id: category?.id ?? DateTime.now().millisecondsSinceEpoch,
                       name: name,
                       colorHex: selectedColor.value.toRadixString(16).toUpperCase(),
-                      iconName: selectedIcon.codePoint.toString(),
+                      iconName: selectedIcon.codePoint.toString(), 
                       limitAmountInCents: limitCents,
                     );
 
@@ -203,7 +210,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
   }
 
   IconData _iconFromName(String? iconName) {
-    if (iconName == null) return Icons.category;
+    if (iconName == null) return _availableIcons.first;
     
     final codePoint = int.tryParse(iconName);
     if (codePoint != null) {

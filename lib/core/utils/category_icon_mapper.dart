@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-const Map<String, IconData> _iconNameToIcon = {
+const Map<String, IconData> _legacyIconMap = {
   'category': Icons.category_outlined,
   'category_outlined': Icons.category_outlined,
   'restaurant': Icons.restaurant_outlined,
@@ -21,19 +21,22 @@ const Map<String, IconData> _iconNameToIcon = {
   'flight_outlined': Icons.flight_outlined,
   'movie': Icons.movie_outlined,
   'movie_outlined': Icons.movie_outlined,
+  'celebration': Icons.celebration,
 };
 
 IconData iconFromCategoryName(String? iconName) {
-  final normalizedName = iconName?.trim();
-  return _iconNameToIcon[normalizedName] ?? _iconNameToIcon['category']!;
+  if (iconName == null || iconName.isEmpty) {
+    return Icons.category_outlined;
+  }
+
+  final codePoint = int.tryParse(iconName);
+  if (codePoint != null) {
+    return IconData(codePoint, fontFamily: 'MaterialIcons');
+  }
+
+  return _legacyIconMap[iconName.trim()] ?? Icons.category_outlined;
 }
 
 String iconNameFromIcon(IconData icon) {
-  for (final entry in _iconNameToIcon.entries) {
-    if (entry.value == icon) {
-      return entry.key == 'category_outlined' ? 'category' : entry.key;
-    }
-  }
-
-  return 'category';
+  return icon.codePoint.toString();
 }
