@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/category_model.dart';
@@ -49,12 +49,12 @@ class CategoryDatabaseService {
 
   List<CategoryModel> _defaultCategories() {
     return [
-      CategoryModel(id: 1, name: 'Alimentação', colorHex: 'FFEF5350', iconName: 'restaurant'),
-      CategoryModel(id: 2, name: 'Transporte', colorHex: 'FF42A5F5', iconName: 'directions_car'),
-      CategoryModel(id: 3, name: 'Lazer', colorHex: 'FFFFCA28', iconName: 'movie'),
-      CategoryModel(id: 4, name: 'Saúde', colorHex: 'FF66BB6A', iconName: 'healing'),
-      CategoryModel(id: 5, name: 'Educação', colorHex: 'FFAB47BC', iconName: 'school'),
-      CategoryModel(id: 6, name: 'Contas', colorHex: 'FF26A69A', iconName: 'home'),
+      CategoryModel(id: 1, name: 'Alimentação', colorHex: 'FFEF5350', iconName: Icons.restaurant.codePoint.toString()),
+      CategoryModel(id: 2, name: 'Transporte', colorHex: 'FF42A5F5', iconName: Icons.directions_car.codePoint.toString()),
+      CategoryModel(id: 3, name: 'Lazer', colorHex: 'FFFFCA28', iconName: Icons.movie.codePoint.toString()), 
+      CategoryModel(id: 4, name: 'Saúde', colorHex: 'FF66BB6A', iconName: Icons.healing.codePoint.toString()),
+      CategoryModel(id: 5, name: 'Educação', colorHex: 'FFAB47BC', iconName: Icons.school.codePoint.toString()),
+      CategoryModel(id: 6, name: 'Contas', colorHex: 'FF26A69A', iconName: Icons.home.codePoint.toString()),
     ];
   }
 }
